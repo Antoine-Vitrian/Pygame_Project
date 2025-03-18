@@ -8,7 +8,7 @@
 #####    - Cada fase é uma guerra( 5 fases: 1° Guerra Mundial, 2° Guerra Mundial, Guerras Médicas[Gregos e Persas], Guerra do Paraguai e Guerra das Coreias )
 #####    - Para passar de fase é preciso derrotar os inimigos, utilizando armas espalhadas pelo mapa de jogo
 #####    - O projeto tem um estilo parecido com o jogo Soul Night 
-
+# 
 ### Passo a serem seguidos
 #####    - Panorama geral da biblioteca pygame ### OK
 #####    - Estrutura básica ### OK
