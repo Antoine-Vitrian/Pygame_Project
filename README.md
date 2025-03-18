@@ -15,6 +15,7 @@
 #####    - Controles e movimentação
 #####    - Cenário e personalização da janela
 #####    - Loop principal de jogo
+#####    - Sistema de colisões
 #####    - Personagens(2)
 #####    - Inimigos(movimentação automática e estética)
 #####    - Sistema de vidas e pontuação
