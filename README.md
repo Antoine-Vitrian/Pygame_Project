@@ -1,6 +1,6 @@
 # Pygame Project
 
-## Nome do jogo: 
+## Nome do jogo: Era das Conquistas
 
 ### Aspectos gerais
 #####    - Tema: Guerra e viagem no tempo
