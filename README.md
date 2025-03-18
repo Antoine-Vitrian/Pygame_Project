@@ -19,3 +19,5 @@
 #####    - Inimigos(movimentação automática e estética)
 #####    - Sistema de vidas e pontuação
 #####    - Telas de menu e game over
+#####    - Sistema de balas, armas e disparos
+#####    - Criação dos mapas
