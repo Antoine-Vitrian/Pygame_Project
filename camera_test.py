@@ -50,9 +50,9 @@ screen = create_screen(SCREEN_WIDTH, SCREEN_HEIGHT, 'Scrolling test')
 
 player = Player_rect(300, 200, 20, plr_col)
 
-gun = Gun(500, 450, 50)
+gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 1)
 
-laser_gun = Laser_gun(300, 300, 200)
+laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 
 # Objeto criado para teste
 obj_surface = pygame.surface.Surface((70, 70))

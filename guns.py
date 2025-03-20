@@ -6,12 +6,12 @@ EQUIP_EVENT = pygame.USEREVENT + 1
 DEQUIP_EVENT = pygame.USEREVENT + 2 
 
 class Gun():
-    def __init__(self,x, y, ammo):
-        self.surface = pygame.surface.Surface((30, 10), pygame.SRCALPHA)
-        self.surface.fill((50, 200, 255))
-        self.rect = self.surface.get_rect()
+    def __init__(self,x, y, ammo, image, scale):
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.ammo = ammo
+        self.curr_ammo = ammo
         self.equiped = False
         self.angle = 0
         self.blts = []
@@ -23,7 +23,7 @@ class Gun():
         mouse_buttons = pygame.mouse.get_pressed()
 
         if self.equiped == False:
-            screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
+            screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
             if self.rect.colliderect(plr):
                 if keys_pressed[pygame.K_e] and plr.equiped == False:
@@ -34,28 +34,35 @@ class Gun():
             if keys_pressed[pygame.K_q] and plr.equiped == True:
                 self.equiped = False
                 pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
-
-            # Detecta se o jogador está apontando para direita ou esquerda
-            if self.angle > 90 or self.angle < -90:
-                self.rect.centerx = plr.rect.centerx - (plr.rect.width // 2)
-                self.rect.centery = plr.rect.centery
-            else:
-                self.rect.centerx = plr.rect.centerx + (plr.rect.width // 2)
-                self.rect.centery = plr.rect.centery
-
             pos_x, pos_y = pygame.mouse.get_pos()
 
             if keys_pressed[pygame.K_t]:
                 print([pos_x, pos_y, self.rect])
 
             # Calcular o ângulo do mouse comparado com a arma
-            dx = pos_x - self.rect.centerx + camera.x
-            dy = pos_y - self.rect.centery + camera.y
-            self.angle = math.degrees(math.atan2(-dy, dx))
+            dist_x = pos_x - self.rect.centerx + camera.x
+            dist_y = pos_y - self.rect.centery + camera.y
+            self.angle = math.degrees(math.atan2(-dist_y, dist_x))
+            
+            # Detecta se o jogador está apontando para direita ou esquerda
+            if self.angle > 90 or self.angle < -90:
+                self.rotated_image = pygame.transform.rotate(self.image, -self.angle)
+                self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+                self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
 
-            self.rotated_surface = pygame.transform.rotate(self.surface, self.angle)
-            self.rotated_rect = self.rotated_surface.get_rect(center=self.rect.center)
-            screen.blit(self.rotated_surface, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+                self.rect.centerx = plr.rect.centerx - (plr.rect.width // 2)
+                self.rect.centery = plr.rect.centery
+
+                screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+            else:
+                self.rotated_image = pygame.transform.rotate(self.image, self.angle)
+                self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+
+                self.rect.centerx = plr.rect.centerx + (plr.rect.width // 2)
+                self.rect.centery = plr.rect.centery
+
+                screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+
 
         for bullet in self.blts:
             bullet.get("rect").x += bullet.get("speed_x")
@@ -77,7 +84,7 @@ class Gun():
             bullet_surface.fill((255, 0, 0))
             bullet_surface_r = pygame.transform.rotate(bullet_surface, self.angle)
             bullet = bullet_surface_r.get_rect()
-            bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 2
+            bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 4
         
             #calcula a velocidade y e x da bala 
             radians = math.radians(-self.angle)
@@ -93,10 +100,9 @@ class Gun():
             self.blts.append(bullet_info)
 
 class Laser_gun():
-    def __init__(self,x, y, ammo):
-        self.surface = pygame.surface.Surface((30, 10), pygame.SRCALPHA)
-        self.surface.fill((50, 100, 120))
-        self.rect = self.surface.get_rect()
+    def __init__(self,x, y, ammo, image, scale):
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.ammo = ammo
         self.curr_ammo = ammo
@@ -110,7 +116,7 @@ class Laser_gun():
         mouse_buttons = pygame.mouse.get_pressed()
 
         if self.equiped == False:
-            screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
+            screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
             if self.rect.colliderect(plr):
                 if keys_pressed[pygame.K_e] and plr.equiped == False:
@@ -129,22 +135,28 @@ class Laser_gun():
                 print([pos_x, pos_y, self.rect])
 
             # Calcular o ângulo do mouse comparado com a arma
-            dx = pos_x - self.rect.centerx + camera.x
-            dy = pos_y - self.rect.centery + camera.y
-            self.angle = math.degrees(math.atan2(-dy, dx))
-
-            # Criar a superficie e o retângulo da arma
-            self.rotated_surface = pygame.transform.rotate(self.surface, self.angle)
-            self.rotated_rect = self.rotated_surface.get_rect(center=self.rect.center)
-            screen.blit(self.rotated_surface, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+            dist_x = pos_x - self.rect.centerx + camera.x
+            dist_y = pos_y - self.rect.centery + camera.y
+            self.angle = math.degrees(math.atan2(-dist_y, dist_x))
     
             # Detecta se o jogador está apontando para direita ou esquerda
             if self.angle > 90 or self.angle < -90:
+                self.rotated_image = pygame.transform.rotate(self.image, -self.angle)
+                self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+                self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
+
                 self.rect.centerx = plr.rect.centerx - (plr.rect.width // 2)
                 self.rect.centery = plr.rect.centery
+
+                screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
             else:
+                self.rotated_image = pygame.transform.rotate(self.image, self.angle)
+                self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+
                 self.rect.centerx = plr.rect.centerx + (plr.rect.width // 2)
                 self.rect.centery = plr.rect.centery
+
+                screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
             # Laser pode atirar até acabar a munição e arma sobreaquece
             if self.laser:
@@ -182,9 +194,9 @@ class Laser_gun():
 
             # definindo Tamanho do laser
             pos_x, pos_y = pygame.mouse.get_pos()
-            dx = pos_x - self.rect.centerx + camera.x
-            dy = pos_y - self.rect.centery + camera.y
-            laser_length = (dx ** 2 + dy ** 2) ** 0.5
+            dist_x = pos_x - self.rect.centerx + camera.x
+            dist_y = pos_y - self.rect.centery + camera.y
+            laser_length = (dist_x ** 2 + dist_y ** 2) ** 0.5
 
             #criando o laser com o ângulo
             laser_surface = pygame.surface.Surface((laser_length , 4), pygame.SRCALPHA)
@@ -194,11 +206,11 @@ class Laser_gun():
             
             # Lógica para o laser ficar na posição correta
             if self.angle < -90:
-                laser.x, laser.y = self.rect.centerx - camera.x + dx, self.rect.centery - camera.y
+                laser.x, laser.y = self.rect.centerx - camera.x + dist_x, self.rect.centery - camera.y
             elif self.angle > 0 and self.angle < 90:
-                laser.x, laser.y = self.rect.centerx - camera.x, self.rect.centery - camera.y + dy
+                laser.x, laser.y = self.rect.centerx - camera.x, self.rect.centery - camera.y + dist_y
             elif self.angle > 90:
-                laser.x, laser.y = self.rect.centerx - camera.x + dx, self.rect.centery - camera.y + dy
+                laser.x, laser.y = self.rect.centerx - camera.x + dist_x, self.rect.centery - camera.y + dist_y
             else:
                 laser.x, laser.y = self.rect.centerx - camera.x, self.rect.centery - camera.y
 
@@ -208,4 +220,4 @@ class Laser_gun():
                 "surface": laser_surface_rotated,
                 "rect": laser,
             }
-            
+        
