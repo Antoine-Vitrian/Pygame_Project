@@ -5,7 +5,7 @@
 ### Aspectos gerais
 #####    - Tema: Guerra e viagem no tempo
 #####    - A história do jogo se baseia em um viajante no tempo que vai ao passado mudar o destino de diversas guerras já existentes em nosso universo
-#####    - Cada fase é uma guerra( 1° Guerra Mundial, 2° Guerra Mundial, Guerras Médicas[Gregos e Persas], Guerra do Paraguai e Guerra das Coreias )
+#####    - Cada fase é uma guerra do passado
 #####    - Para passar de fase é preciso derrotar os inimigos, utilizando armas espalhadas pelo mapa de jogo 
 # 
 ### Passo a serem seguidos
