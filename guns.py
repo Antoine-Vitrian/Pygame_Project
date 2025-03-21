@@ -34,6 +34,7 @@ class Gun():
             if keys_pressed[pygame.K_q] and plr.equiped == True:
                 self.equiped = False
                 pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
+                
             pos_x, pos_y = pygame.mouse.get_pos()
 
             if keys_pressed[pygame.K_t]:
@@ -99,6 +100,8 @@ class Gun():
             }
             self.blts.append(bullet_info)
 
+
+#------------------Arma Laser------------------------------------------
 class Laser_gun():
     def __init__(self,x, y, ammo, image, scale):
         self.image = pygame.image.load(image)
@@ -131,9 +134,6 @@ class Laser_gun():
 
             pos_x, pos_y = pygame.mouse.get_pos()
 
-            if keys_pressed[pygame.K_t]:
-                print([pos_x, pos_y, self.rect])
-
             # Calcular o ângulo do mouse comparado com a arma
             dist_x = pos_x - self.rect.centerx + camera.x
             dist_y = pos_y - self.rect.centery + camera.y
@@ -157,17 +157,18 @@ class Laser_gun():
                 self.rect.centery = plr.rect.centery
 
                 screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
-
-            # Laser pode atirar até acabar a munição e arma sobreaquece
-            if self.laser:
+                    
+                if keys_pressed[pygame.K_t]:
+                    print([self.rotated_rect.x - camera.x, self.rect.x])
+                
+            if mouse_buttons[0]:
+                self.firing()
+                # Laser pode atirar até acabar a munição e arma sobreaquece
                 if self.curr_ammo > 0 and self.overheat_timer == 0:
                     screen.blit(self.laser.get('surface'), self.laser.get('rect'))
                     self.curr_ammo -= 1
                 else:
                     self.overheat_timer = 60
-                    
-            if mouse_buttons[0]:
-                self.firing()
             else:
                 self.laser = {}
 
@@ -199,7 +200,7 @@ class Laser_gun():
             laser_length = (dist_x ** 2 + dist_y ** 2) ** 0.5
 
             #criando o laser com o ângulo
-            laser_surface = pygame.surface.Surface((laser_length , 4), pygame.SRCALPHA)
+            laser_surface = pygame.surface.Surface((laser_length , 2), pygame.SRCALPHA)
             laser_surface.fill((255, 255, 0))
             laser_surface_rotated = pygame.transform.rotate(laser_surface, self.angle)
             laser = laser_surface_rotated.get_rect()

@@ -98,17 +98,17 @@ def game():
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_t:
-                    print(player.surface, player.rect)
+            # if event.type == pygame.KEYDOWN:
+            #     if event.key == pygame.K_t:
+            #         print(player.surface, player.rect)
 
             if event.type == EQUIP_EVENT:
                 player.equip()
             elif event.type == DEQUIP_EVENT:   
                 player.equip()
 
-        if laser_gun.laser.get('rect') and laser_gun.laser.get('rect').colliderect(gun.rect):
-            print('teste')
+        # if laser_gun.laser.get('rect') and laser_gun.laser.get('rect').colliderect(gun.rect):
+        #     print('teste')
 
         # if laser_gun.laser.get('rect') and laser_gun.laser.get('rect').colliderect(obj):
         #     print('foi\n', obj)
