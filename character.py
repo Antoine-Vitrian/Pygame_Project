@@ -11,18 +11,19 @@ class Player():
         self.rect.y = y
         self.life = life
         self.equiped = False
+        self.speed = 5
 
     def update(self, screen):
         keys_pressed = pygame.key.get_pressed()
 
         if keys_pressed[pygame.K_a]:
-            self.rect.x -= 4
+            self.rect.x -= self.speed
         if keys_pressed[pygame.K_d]:
-            self.rect.x += 4
+            self.rect.x += self.speed
         if keys_pressed[pygame.K_w]:
-            self.rect.y -= 4
+            self.rect.y -= self.speed
         if keys_pressed[pygame.K_s]:
-            self.rect.y += 4
+            self.rect.y += self.speed
 
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
@@ -38,18 +39,19 @@ class Player_rect():
         self.rect.y = y
         self.life = life
         self.equiped = False
+        self.speed = 5
 
     def update(self, screen):
         keys_pressed = pygame.key.get_pressed()
 
         if keys_pressed[pygame.K_a]:
-            self.rect.x -= 4
+            self.rect.x -= self.speed
         if keys_pressed[pygame.K_d]:
-            self.rect.x += 4
+            self.rect.x += self.speed
         if keys_pressed[pygame.K_w]:
-            self.rect.y -= 4
+            self.rect.y -= self.speed
         if keys_pressed[pygame.K_s]:
-            self.rect.y += 4
+            self.rect.y += self.speed
 
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
