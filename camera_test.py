@@ -1,9 +1,8 @@
 import pygame
 import sys
-import random
 
 from character import Player_rect
-from guns import Gun, Laser_gun, EQUIP_EVENT, DEQUIP_EVENT
+from guns import *
 from camera import camera
 from game_map import *
 
@@ -25,22 +24,29 @@ map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
 player = Player_rect(300, 200, 20, plr_col)
 
-gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 1)
+gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80)
+pistol = Gun(500, 700, 30, 'Img/Armas/pistol.png', 7, 60)
 
 laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
+
+bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 1)
+
+loaded_guns = [gun, pistol, laser_gun, bazooka]
 
 # Objeto criado para teste
 obj_surface = pygame.surface.Surface((70, 70))
 obj = pygame.rect.Rect(600 - camera.x, 600 - camera.y, obj_surface.get_width(), obj_surface.get_height())
 
-def update_screen(player, gun, camera):
+def update_screen(player, guns, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(map.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
 
     player.update(screen)
 
-    gun.update(player, screen)
-    laser_gun.update(player, screen)
+    for gun in guns:
+        gun.update(player, screen)
+        if gun.equiped == True:
+            gun.draw_ammo(screen)
 
     screen.blit(obj_surface, (obj.x - camera.x, obj.y -camera.y))
         
@@ -53,7 +59,7 @@ def game():
 
         map.draw(screen)
 
-        update_screen(player, gun, camera)
+        update_screen(player, loaded_guns, camera)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -67,7 +73,7 @@ def game():
             if event.type == EQUIP_EVENT:
                 player.equip()
             elif event.type == DEQUIP_EVENT:   
-                player.equip()
+                player.dequip()
 
         # if laser_gun.laser.get('rect') and laser_gun.laser.get('rect').colliderect(gun.rect):
         #     print('teste')

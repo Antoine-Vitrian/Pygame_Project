@@ -28,7 +28,10 @@ class Player():
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
     def equip(self):
-        self.equiped = not self.equiped
+        self.equiped = True
+
+    def dequip(self):
+        self.equiped = False
 
 class Player_rect():
     def __init__(self, x, y, life, col):
@@ -40,6 +43,7 @@ class Player_rect():
         self.life = life
         self.equiped = False
         self.speed = 5
+        
 
     def update(self, screen):
         keys_pressed = pygame.key.get_pressed()
@@ -56,4 +60,7 @@ class Player_rect():
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
     def equip(self):
-        self.equiped = not self.equiped
+        self.equiped = True
+
+    def dequip(self):
+        self.equiped = False
