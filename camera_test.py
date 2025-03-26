@@ -24,18 +24,15 @@ map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
 player = Player_rect(300, 200, 20, plr_col)
 
-gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80)
-pistol = Gun(500, 700, 30, 'Img/Armas/pistol.png', 7, 60)
+gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
+pistol = Gun(500, 700, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
 
 laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 
-bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 1)
+bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100)
 
 loaded_guns = [gun, pistol, laser_gun, bazooka]
 
-# Objeto criado para teste
-obj_surface = pygame.surface.Surface((70, 70))
-obj = pygame.rect.Rect(600 - camera.x, 600 - camera.y, obj_surface.get_width(), obj_surface.get_height())
 
 def update_screen(player, guns, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
@@ -47,9 +44,6 @@ def update_screen(player, guns, camera):
         gun.update(player, screen)
         if gun.equiped == True:
             gun.draw_ammo(screen)
-
-    screen.blit(obj_surface, (obj.x - camera.x, obj.y -camera.y))
-        
 
 def game():
 

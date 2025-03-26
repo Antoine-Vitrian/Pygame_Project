@@ -1,5 +1,6 @@
 import pygame
 from camera import camera
+from game_map import SCREEN_HEIGHT, SCREEN_WIDTH
 
 class Player():
     def __init__(self, x, y, life, image, scale):
@@ -43,8 +44,9 @@ class Player_rect():
         self.life = life
         self.equiped = False
         self.speed = 5
-        
-
+        self.bazooka_ammo_pack = 4
+        self.ammo_pack = 5
+    
     def update(self, screen):
         keys_pressed = pygame.key.get_pressed()
 
@@ -59,8 +61,22 @@ class Player_rect():
 
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
+        self.show_ammo_packs(screen)
+
     def equip(self):
         self.equiped = True
 
     def dequip(self):
         self.equiped = False
+
+    def show_ammo_packs(self, screen):
+        ammo_pack = pygame.image.load('Img/other/gun_battery.png')
+        bazooka_ammo_pack = pygame.image.load('Img/other/bazooka_ammo.png')
+        dist = 26
+
+
+        for pack in range(self.ammo_pack):
+            screen.blit(ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 60))
+            
+        for pack in range(self.bazooka_ammo_pack):
+            screen.blit(bazooka_ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 30))

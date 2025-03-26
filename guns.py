@@ -6,26 +6,30 @@ EQUIP_EVENT = pygame.USEREVENT + 1
 DEQUIP_EVENT = pygame.USEREVENT + 2 
 
 class Gun():
-    def __init__(self,x, y, ammo, image, blt_speed, recharge_time):
+    def __init__(self,x, y, ammo, image, blt_speed, recharge_time, shoot_cooldown, auto_shoot):
         # surface e rectangle
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
 
         #munições
-        self.ammo = ammo
-        self.curr_ammo = ammo
-        self.blts = []
-        self.blt_speed = blt_speed
-        self.blt_time = 150
-        self.recharge_time = recharge_time
+        self.ammo = ammo # munição total
+        self.curr_ammo = ammo # munição atual
+        self.blts = [] # lista para as balas carregadas
+        self.blt_speed = blt_speed # velocidade da bala
+        self.blt_time = 150 # tempo de vida da bala
+        self.recharge_time = recharge_time #tempo de recarga
+        self.curr_recharge_time = recharge_time
         self.recharge = False
 
         # outros
-        self.angle = 0
+        self.angle = 0 
         self.equiped = False
-        self.x = (0, 0, 0)  # Track previous mouse state
+        self.x = (0, 0, 0) 
         self.hand = 'right'
+        self.shoot_cooldown = shoot_cooldown
+        self.curr_shoot_cooldown = 0
+        self.auto_shoot = auto_shoot
 
     def update(self, plr, screen):
         keys_pressed = pygame.key.get_pressed()
@@ -55,16 +59,22 @@ class Gun():
             self.draw_gun(screen, plr)
 
             # Lógica para atirar
-            if mouse_buttons[0] and self.prev_mouse_buttons[0] == 0 and self.curr_ammo > 0 and self.recharge == False:
+            if mouse_buttons[0] and (self.prev_mouse_buttons[0] == 0 or self.auto_shoot) and self.curr_ammo > 0 and not self.recharge and not self.curr_shoot_cooldown:
                 self.shoot()
                 self.curr_ammo -= 1
+                self.curr_shoot_cooldown = self.shoot_cooldown
+
+            # Permite o jogador atirar depois de um cooldown
+            if self.curr_shoot_cooldown:
+                self.curr_shoot_cooldown -= 1
 
             # Recarregar arma
-            if keys_pressed[pygame.K_r] and self.recharge == False and self.curr_ammo != self.ammo:
+            if keys_pressed[pygame.K_r] and self.recharge == False and self.curr_ammo != self.ammo and plr.ammo_pack:
                 self.recharge = True
+                plr.ammo_pack -= 1
 
-        if self.recharge == True:
-            self.recharging()
+        if self.recharge:
+            self.recharging(screen)
 
         self.handle_bullets(screen)
 
@@ -74,8 +84,7 @@ class Gun():
         if self.equiped == True:
 
             #criando a bala e transformando para ficar com o ângulo correto
-            bullet_surface = pygame.surface.Surface((10, 4), pygame.SRCALPHA)
-            bullet_surface.fill((255, 0, 0))
+            bullet_surface = pygame.image.load('Img/other/laser_blt.png')
             rotated_bullet_surface = pygame.transform.rotate(bullet_surface, self.angle)
             bullet = rotated_bullet_surface.get_rect()
             bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 4
@@ -99,7 +108,6 @@ class Gun():
             bullet.get("rect").x += bullet.get("speed_x")
             bullet.get("rect").y += bullet.get("speed_y")
 
-            #TODO: Criar uma cor para a balaa
             screen.blit(bullet.get("surface"), (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
 
             # Diminui tempo de vida da bala e remove se acabar
@@ -108,19 +116,23 @@ class Gun():
             else:
                 self.blts.remove(bullet)
 
-    def recharging(self):
-        if self.recharge_time:
-            self.recharge_time -= 1
+    def recharging(self, screen):
+        if self.curr_recharge_time:
+            self.curr_recharge_time -= 1
+
+            # Desenha o cooldown de recarga
+            pygame.draw.rect(screen, (255, 0, 0), (50, 80, self.recharge_time, 10))
+            pygame.draw.rect(screen, (255, 255, 0), (50, 80, self.curr_recharge_time, 10))
         else:
             self.curr_ammo = self.ammo
-            self.recharge_time = 80
+            self.curr_recharge_time = self.recharge_time
             self.recharge = False    
             
 
     def draw_ammo(self, screen):
         # Desenha a munição da arma
-        pygame.draw.rect(screen, (255, 0, 0), (50, 50, self.ammo, 20))
-        pygame.draw.rect(screen, (0, 255, 0), (50, 50, self.curr_ammo, 20))
+        pygame.draw.rect(screen, (255, 0, 0), (50, 50, self.ammo * 3, 20))
+        pygame.draw.rect(screen, (0, 255, 0), (50, 50, self.curr_ammo * 3, 20))
 
     def draw_gun(self, screen, plr):
         pos_x, pos_y = pygame.mouse.get_pos()
@@ -283,7 +295,7 @@ class Laser_gun():
 
 #--------------------------Basuca--------------------------------------------
 class Bazooka():
-    def __init__(self,x, y, ammo, image, scale):
+    def __init__(self,x, y, ammo, image, recharge_time):
         # surface e rectangle
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
@@ -294,7 +306,8 @@ class Bazooka():
         self.curr_ammo = ammo
         self.blts = []
         self.blt_speed = 5
-        self.recharge_time = 80
+        self.recharge_time = recharge_time
+        self.curr_recharge_time = recharge_time
         self.recharge = False
 
         # outros
@@ -302,6 +315,8 @@ class Bazooka():
         self.equiped = False
         self.x = (0, 0, 0)  # Track previous mouse state
         self.hand = 'right'
+        self.shoot_cooldown = 30
+        self.curr_shoot_cooldown = 0
 
     def update(self, plr, screen):
         keys_pressed = pygame.key.get_pressed()
@@ -331,18 +346,25 @@ class Bazooka():
             self.get_angle() #calcula o ângulo com vetores
 
             # Lógica para atirar
-            if mouse_buttons[0] and self.prev_mouse_buttons[0] == 0 and self.curr_ammo > 0 and self.recharge == False:
+            if mouse_buttons[0] and self.prev_mouse_buttons[0] == 0 and self.curr_ammo > 0 and not self.recharge and not self.curr_shoot_cooldown:
                 self.shoot(pos_x, pos_y)
                 self.curr_ammo -= 1
+                self.curr_shoot_cooldown = self.shoot_cooldown
+
+            # Permite o jogador atirar depois de um cooldown
+            if self.curr_shoot_cooldown:
+                self.curr_shoot_cooldown -= 1
+
 
             # Recarregar arma
-            if keys_pressed[pygame.K_r] and self.recharge == False and self.curr_ammo != self.ammo:
+            if keys_pressed[pygame.K_r] and self.recharge == False and self.curr_ammo != self.ammo and plr.bazooka_ammo_pack:
                 self.recharge = True
+                plr.bazooka_ammo_pack -= 1
 
             self.draw_gun(screen, plr)
 
-        if self.recharge == True:
-            self.recharging()
+        if self.recharge:
+            self.recharging(screen)
 
         self.handle_bullets(screen)
 
@@ -353,8 +375,7 @@ class Bazooka():
         if self.equiped == True:
 
             #criando a bala e transformando para ficar com o ângulo correto
-            bullet_surface = pygame.surface.Surface((19, 10), pygame.SRCALPHA)
-            bullet_surface.fill((255, 0, 0))
+            bullet_surface = pygame.image.load('Img/other/bazooka_blt_test.gif')
             rotated_bullet_surface = pygame.transform.rotate(bullet_surface, self.angle)
             bullet = rotated_bullet_surface.get_rect()
             bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 4
@@ -363,13 +384,22 @@ class Bazooka():
             radians = math.radians(-self.angle)
             cos_mouse = math.cos(radians)
             sin_mouse = math.sin(radians)
+
+            # Distância do mouse para a arma
+            dx = self.rect.x - camera.x - mouse_x
+            dy = self.rect.y - camera.y - mouse_y
+            dist = (dx**2 + dy**2) ** 0.5
+            print(self.rect, (mouse_x, mouse_y), dist)
+
+            # Calcula o tempo de vida da bala
+            time = dist // self.blt_speed
             
             self.blts.append({
                 "surface": rotated_bullet_surface,
                 "rect": bullet,
                 "speed_x": self.blt_speed * cos_mouse,
                 "speed_y": self.blt_speed * sin_mouse,
-                "explode_point": (mouse_x + camera.x, mouse_y + camera.y),
+                "time_to_live": time,
                 "explosion_time": 60
             })
 
@@ -378,12 +408,11 @@ class Bazooka():
             bullet.get("rect").x += bullet.get("speed_x")
             bullet.get("rect").y += bullet.get("speed_y")
 
-            #TODO: Criar uma cor para a balaa
             screen.blit(bullet.get("surface"), (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
 
-            x, y = bullet.get("explode_point")
-
-            if bullet["rect"].colliderect(x, y, 50, 50):
+            if bullet.get("time_to_live"):
+                bullet["time_to_live"] -= 1
+            else:
                 bullet["speed_x"] = 0
                 bullet["speed_y"] = 0
                 self.explosion(screen, bullet)
@@ -398,12 +427,16 @@ class Bazooka():
         else:
             self.blts.remove(bullet)
 
-    def recharging(self):
-        if self.recharge_time:
-            self.recharge_time -= 1
+    def recharging(self, screen):
+        if self.curr_recharge_time:
+            self.curr_recharge_time -= 1
+
+            # Desenha o cooldown de recarga
+            pygame.draw.rect(screen, (255, 0, 0), (50, 80, self.recharge_time, 10))
+            pygame.draw.rect(screen, (255, 255, 0), (50, 80, self.curr_recharge_time, 10))
         else:
             self.curr_ammo = self.ammo
-            self.recharge_time = 80
+            self.curr_recharge_time = self.recharge_time
             self.recharge = False    
             
     def draw_ammo(self, screen):
