@@ -5,6 +5,7 @@ from character import Player_rect
 from guns import *
 from camera import camera
 from game_map import *
+from itens import AmmoPack
 
 pygame.init()
 
@@ -22,7 +23,7 @@ tile_kinds = [
 
 map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
-player = Player_rect(300, 200, 20, plr_col)
+player = Player_rect(300, 200, 100, plr_col)
 
 gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
 pistol = Gun(500, 700, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
@@ -31,12 +32,24 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100)
 
-loaded_guns = [gun, pistol, laser_gun, bazooka]
+ammo_pack = AmmoPack(500, 200, 'gun', 0.7)
+bazooka_pack = AmmoPack(500, 300, 'bazooka', 0.7)
 
+loaded_guns = [gun, pistol, laser_gun, bazooka]
+loaded_items = [ammo_pack, bazooka_pack]
+
+def item_handler(items):
+    for item in items:
+        if item.droped == True:
+            item.update(screen, player)
+        else:
+            loaded_items.remove(item)
 
 def update_screen(player, guns, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(map.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
+
+    item_handler(loaded_items)
 
     player.update(screen)
 
@@ -51,9 +64,9 @@ def game():
     while run:
         clock.tick(FPS)
 
-        map.draw(screen)
+        map.draw(screen) # desenha o mapa (background)
 
-        update_screen(player, loaded_guns, camera)
+        update_screen(player, loaded_guns, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

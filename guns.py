@@ -121,7 +121,7 @@ class Gun():
             self.curr_recharge_time -= 1
 
             # Desenha o cooldown de recarga
-            pygame.draw.rect(screen, (255, 0, 0), (50, 80, self.recharge_time, 10))
+            pygame.draw.rect(screen, (80, 80, 80), (50, 80, self.recharge_time, 10))
             pygame.draw.rect(screen, (255, 255, 0), (50, 80, self.curr_recharge_time, 10))
         else:
             self.curr_ammo = self.ammo
@@ -131,8 +131,8 @@ class Gun():
 
     def draw_ammo(self, screen):
         # Desenha a munição da arma
-        pygame.draw.rect(screen, (255, 0, 0), (50, 50, self.ammo * 3, 20))
-        pygame.draw.rect(screen, (0, 255, 0), (50, 50, self.curr_ammo * 3, 20))
+        pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo * 3, 20))
+        pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo * 3, 20))
 
     def draw_gun(self, screen, plr):
         pos_x, pos_y = pygame.mouse.get_pos()
@@ -270,12 +270,12 @@ class Laser_gun():
 
     def draw_ammo(self, screen):
         # Desenha a munição da arma
-        pygame.draw.rect(screen, (255, 0, 0), (50, 50, self.ammo, 20))
-        pygame.draw.rect(screen, (0, 255, 0), (50, 50, self.curr_ammo, 20))
+        pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo, 20))
+        pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo, 20))
 
         # avisa caso esteja em overheat
         if self.overheat_timer:
-            pygame.draw.rect(screen, (255, 0, 0), (60, 10, 60, 20))
+            pygame.draw.rect(screen, (80, 80, 80), (60, 10, 60, 20))
             pygame.draw.rect(screen, (255, 255, 0), (60, 10, self.overheat_timer, 20))
 
     def get_laser_pos(self):
@@ -389,7 +389,6 @@ class Bazooka():
             dx = self.rect.x - camera.x - mouse_x
             dy = self.rect.y - camera.y - mouse_y
             dist = (dx**2 + dy**2) ** 0.5
-            print(self.rect, (mouse_x, mouse_y), dist)
 
             # Calcula o tempo de vida da bala
             time = dist // self.blt_speed
@@ -432,7 +431,7 @@ class Bazooka():
             self.curr_recharge_time -= 1
 
             # Desenha o cooldown de recarga
-            pygame.draw.rect(screen, (255, 0, 0), (50, 80, self.recharge_time, 10))
+            pygame.draw.rect(screen, (80, 80, 80), (50, 80, self.recharge_time, 10))
             pygame.draw.rect(screen, (255, 255, 0), (50, 80, self.curr_recharge_time, 10))
         else:
             self.curr_ammo = self.ammo
@@ -441,8 +440,8 @@ class Bazooka():
             
     def draw_ammo(self, screen):
         # Desenha a munição da arma
-        pygame.draw.rect(screen, (255, 0, 0), (50, 50, self.ammo * 5, 20))
-        pygame.draw.rect(screen, (0, 255, 0), (50, 50, self.curr_ammo * 5, 20))
+        pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo * 5, 20))
+        pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo * 5, 20))
 
     #--------------arma-----------------
     def draw_gun(self, screen, plr):

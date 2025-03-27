@@ -61,13 +61,20 @@ class Player_rect():
 
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y - camera.y))
 
-        self.show_ammo_packs(screen)
+        self.draw_life(screen)
+        if self.equiped == True or keys_pressed[pygame.K_c]:
+            self.show_ammo_packs(screen)
 
     def equip(self):
         self.equiped = True
 
     def dequip(self):
         self.equiped = False
+
+    def draw_life(self, screen):
+        #desenha a vida do jogador na tela
+        pygame.draw.rect(screen, (255, 0, 0), (50, 20, self.life * 2, 15))
+        pygame.draw.rect(screen, (0, 255, 0), (50, 20, self.life * 2, 15))
 
     def show_ammo_packs(self, screen):
         ammo_pack = pygame.image.load('Img/other/gun_battery.png')

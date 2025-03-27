@@ -3,7 +3,7 @@ from camera import create_screen, camera
 import csv
 
 TILES_SIZE = 32
-
+0
 SCREEN_WIDTH = TILES_SIZE * 20
 SCREEN_HEIGHT = TILES_SIZE * 16
 
