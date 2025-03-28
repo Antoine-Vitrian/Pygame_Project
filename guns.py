@@ -1,6 +1,7 @@
 import pygame
 import math
 from camera import camera
+from sprites import *
 
 EQUIP_EVENT = pygame.USEREVENT + 1
 DEQUIP_EVENT = pygame.USEREVENT + 2 
@@ -217,13 +218,13 @@ class Laser_gun():
                     pygame.draw.line(screen, (255, 255, 0), *self.get_laser_pos(), 3)
                     self.curr_ammo -= 1
                 else:
-                    self.overheat_timer = 60
+                    self.overheat_timer = 120
 
 
         
         # Recarrega enquanto a munição é menor que a munição máxima e não está atirando
-        if (self.curr_ammo < self.ammo and not mouse_buttons[0]) or self.overheat_timer:
-            self.curr_ammo += 1
+        if (self.curr_ammo < self.ammo and not mouse_buttons[0]) or self.overheat_timer and self.curr_ammo <= self.ammo:
+            self.curr_ammo += 1.3
             
         # Se a arma sobreaqueceu diminui o timer do sobreaquecimento
         if self.overheat_timer > 0:
@@ -275,8 +276,8 @@ class Laser_gun():
 
         # avisa caso esteja em overheat
         if self.overheat_timer:
-            pygame.draw.rect(screen, (80, 80, 80), (60, 10, 60, 20))
-            pygame.draw.rect(screen, (255, 255, 0), (60, 10, self.overheat_timer, 20))
+            pygame.draw.rect(screen, (80, 80, 80), (50, 90, 120, 10))
+            pygame.draw.rect(screen, (255, 255, 0), (50, 90, self.overheat_timer, 10))
 
     def get_laser_pos(self):
         pos_x, pos_y = pygame.mouse.get_pos()
@@ -295,7 +296,7 @@ class Laser_gun():
 
 #--------------------------Basuca--------------------------------------------
 class Bazooka():
-    def __init__(self,x, y, ammo, image, recharge_time):
+    def __init__(self,x, y, ammo, image, recharge_time, animation_cooldown, sprite_sheet, sprite_width, sprite_height):
         # surface e rectangle
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
@@ -310,17 +311,33 @@ class Bazooka():
         self.curr_recharge_time = recharge_time
         self.recharge = False
 
+        # Projetil
+        self.shoot_cooldown = 30
+        self.curr_shoot_cooldown = 0
+
+        # Animação
+        self.sprite_image = pygame.image.load(sprite_sheet)
+        self.sprite_sheet = SpriteSheet(self.sprite_image)
+        self.animation_list = self.sprite_sheet.get_animations([3, 7], sprite_width, sprite_height, 2)
+        self.sprite_width = sprite_width
+        self.sprite_height = sprite_height
+        self.animation_cooldown = animation_cooldown
+        self.last_update = pygame.time.get_ticks()
+        self.projectile_action = 0
+        self.explosion_action = 1
+        print(self.animation_list)
+
         # outros
         self.angle = 0
         self.equiped = False
         self.x = (0, 0, 0)  # Track previous mouse state
         self.hand = 'right'
-        self.shoot_cooldown = 30
-        self.curr_shoot_cooldown = 0
+
 
     def update(self, plr, screen):
         keys_pressed = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
+        current_time = pygame.time.get_ticks()
 
         if self.equiped == False:
             screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y)) # desenha a arma jogada no chão
@@ -366,7 +383,7 @@ class Bazooka():
         if self.recharge:
             self.recharging(screen)
 
-        self.handle_bullets(screen)
+        self.handle_bullets(screen, current_time)
 
         self.prev_mouse_buttons = mouse_buttons
 
@@ -375,10 +392,13 @@ class Bazooka():
         if self.equiped == True:
 
             #criando a bala e transformando para ficar com o ângulo correto
-            bullet_surface = pygame.image.load('Img/other/bazooka_blt_test.gif')
-            rotated_bullet_surface = pygame.transform.rotate(bullet_surface, self.angle)
-            bullet = rotated_bullet_surface.get_rect()
-            bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 4
+            frames = self.animation_list[self.projectile_action]
+            bullet = pygame.rect.Rect(
+                self.rect.x + self.rect.width // 2, # posição x
+                self.rect.y + self.rect.height // 4, # posição y
+                self.sprite_width, # largura
+                self.sprite_height # altura
+            )
         
             #calcula a velocidade y e x da bala 
             radians = math.radians(-self.angle)
@@ -394,37 +414,50 @@ class Bazooka():
             time = dist // self.blt_speed
             
             self.blts.append({
-                "surface": rotated_bullet_surface,
+                "frames_img": frames,
+                "frame": 0,
+                "last_update": pygame.time.get_ticks(),
                 "rect": bullet,
                 "speed_x": self.blt_speed * cos_mouse,
                 "speed_y": self.blt_speed * sin_mouse,
                 "time_to_live": time,
-                "explosion_time": 60
+                "explosion_time": len(self.animation_list[self.explosion_action])
             })
 
-    def handle_bullets(self, screen):
+    def handle_bullets(self, screen, curr_time):
         for bullet in self.blts:
             bullet.get("rect").x += bullet.get("speed_x")
             bullet.get("rect").y += bullet.get("speed_y")
 
-            screen.blit(bullet.get("surface"), (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
+            # Animação do projétil
+            if curr_time - bullet.get("last_update") >= self.animation_cooldown:
+                bullet["frame"] += 1
+                bullet["last_update"] = curr_time
+                if bullet.get("time_to_live") and bullet.get("frame") >= len(self.animation_list[self.projectile_action]):
+                        bullet["frame"] = 0
 
+            # Desenha o projétil e diminui o tempo de vida
             if bullet.get("time_to_live"):
                 bullet["time_to_live"] -= 1
+                screen.blit(bullet["frames_img"][bullet["frame"]], (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
             else:
                 bullet["speed_x"] = 0
                 bullet["speed_y"] = 0
-                self.explosion(screen, bullet)
+                if bullet["frame"] < len(self.animation_list[self.explosion_action]):
+                    self.explosion(screen, bullet)
+                else:
+                    self.blts.remove(bullet)
 
             
     def explosion(self, screen, bullet):
-        EXPLOSION_SIZE = 70
+        explosion_frames = self.animation_list[self.explosion_action]
+        exp_surf = explosion_frames[bullet["frame"]]
+        print(explosion_frames.index(exp_surf))
+        exp_width, exp_height = exp_surf.get_width(), exp_surf.get_height()
 
-        if bullet["explosion_time"]:
-            pygame.draw.rect(screen, (255, 100, 59), (bullet["rect"].x - EXPLOSION_SIZE//2 - camera.x, bullet["rect"].y - EXPLOSION_SIZE//2 - camera.y, EXPLOSION_SIZE, EXPLOSION_SIZE))
-            bullet["explosion_time"] -= 1
-        else:
-            self.blts.remove(bullet)
+        # lida com a animação da explosão
+        screen.blit(exp_surf, (bullet.get("rect").centerx - exp_width//2 - camera.x, bullet.get("rect").centery - exp_height//2 - camera.y))
+        bullet["explosion_time"] -= 1
 
     def recharging(self, screen):
         if self.curr_recharge_time:
@@ -479,3 +512,4 @@ class Bazooka():
         direction = mouse_pos - gun_pos  # Vector from player to mouse
         if direction.length() > 0:
             self.angle = direction.angle_to(pygame.Vector2(1, 0))
+

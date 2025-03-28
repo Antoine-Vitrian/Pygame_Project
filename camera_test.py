@@ -6,6 +6,7 @@ from guns import *
 from camera import camera
 from game_map import *
 from itens import AmmoPack
+from sprites import *
 
 pygame.init()
 
@@ -13,25 +14,28 @@ pygame.init()
 clock = pygame.time.Clock()
 FPS = 60
 
-plr_col = (255, 0, 0)
+animation_cooldown = 60
+last_update = pygame.time.get_ticks()
 
+# Mapa
 tile_kinds = [
     Tile_kind("sand", "Img/tiles/areia.png", False),
     Tile_kind("sand", "Img/tiles/areia_2.png", False),
     Tile_kind("sand", "Img/tiles/areia_3.png", False),
 ]
-
 map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
+# Jogador
+plr_col = (255, 150, 100)
 player = Player_rect(300, 200, 100, plr_col)
 
+# Armas
 gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
 pistol = Gun(500, 700, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
-
 laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
+bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
-bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100)
-
+# Munições
 ammo_pack = AmmoPack(500, 200, 'gun', 0.7)
 bazooka_pack = AmmoPack(500, 300, 'bazooka', 0.7)
 
