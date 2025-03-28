@@ -325,7 +325,6 @@ class Bazooka():
         self.last_update = pygame.time.get_ticks()
         self.projectile_action = 0
         self.explosion_action = 1
-        print(self.animation_list)
 
         # outros
         self.angle = 0
@@ -394,8 +393,8 @@ class Bazooka():
             #criando a bala e transformando para ficar com o ângulo correto
             frames = self.animation_list[self.projectile_action]
             bullet = pygame.rect.Rect(
-                self.rect.x + self.rect.width // 2, # posição x
-                self.rect.y + self.rect.height // 4, # posição y
+                self.rect.x - self.rect.width // 2, # posição x
+                self.rect.y - self.sprite_height, # posição y
                 self.sprite_width, # largura
                 self.sprite_height # altura
             )
@@ -421,7 +420,8 @@ class Bazooka():
                 "speed_x": self.blt_speed * cos_mouse,
                 "speed_y": self.blt_speed * sin_mouse,
                 "time_to_live": time,
-                "explosion_time": len(self.animation_list[self.explosion_action])
+                "explosion_time": len(self.animation_list[self.explosion_action]),
+                "exploded": False
             })
 
     def handle_bullets(self, screen, curr_time):
@@ -450,14 +450,20 @@ class Bazooka():
 
             
     def explosion(self, screen, bullet):
-        explosion_frames = self.animation_list[self.explosion_action]
-        exp_surf = explosion_frames[bullet["frame"]]
-        print(explosion_frames.index(exp_surf))
-        exp_width, exp_height = exp_surf.get_width(), exp_surf.get_height()
+        if not bullet.get("exploded"):
+            bullet["frame"] = 0
+            bullet["exploded"] = True
+        else:        
+            explosion_frames = self.animation_list[self.explosion_action]
+            for i in range(len(explosion_frames)):
+                explosion_frames[i] = pygame.transform.scale(explosion_frames[i], (self.sprite_width * 3, self.sprite_height * 3))
+                explosion_frames[i].set_colorkey((0, 0, 0))
+            exp_surf = explosion_frames[bullet["frame"]]
+            exp_width, exp_height = exp_surf.get_width(), exp_surf.get_height()
 
-        # lida com a animação da explosão
-        screen.blit(exp_surf, (bullet.get("rect").centerx - exp_width//2 - camera.x, bullet.get("rect").centery - exp_height//2 - camera.y))
-        bullet["explosion_time"] -= 1
+            # lida com a animação da explosão
+            screen.blit(exp_surf, (bullet.get("rect").centerx - exp_width//2 - camera.x, bullet.get("rect").centery - exp_height//2 - camera.y))
+            bullet["explosion_time"] -= 1
 
     def recharging(self, screen):
         if self.curr_recharge_time:
