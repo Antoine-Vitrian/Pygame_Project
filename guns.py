@@ -7,11 +7,11 @@ EQUIP_EVENT = pygame.USEREVENT + 1
 DEQUIP_EVENT = pygame.USEREVENT + 2 
 
 class Gun():
-    def __init__(self,x, y, ammo, image, blt_speed, recharge_time, shoot_cooldown, auto_shoot):
+    def __init__(self, x, y, ammo, image, blt_speed, recharge_time, shoot_cooldown, auto_shoot):
         # surface e rectangle
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
+        self.rect.x, self.rect.y = x, y
 
         #munições
         self.ammo = ammo # munição total
@@ -52,12 +52,9 @@ class Gun():
             # Posição do mouse    
             pos_x, pos_y = pygame.mouse.get_pos()
 
-            # Calcular o ângulo do mouse comparado com a arma
-            dist_x = pos_x - self.rect.centerx + camera.x
-            dist_y = pos_y - self.rect.centery + camera.y
-            self.angle = math.degrees(math.atan2(-dist_y, dist_x))
+            self.get_angle((pos_x, pos_y))
 
-            self.draw_gun(screen, plr)
+            self.draw_gun(screen, plr, (pos_x, pos_y))
 
             # Lógica para atirar
             if mouse_buttons[0] and (self.prev_mouse_buttons[0] == 0 or self.auto_shoot) and self.curr_ammo > 0 and not self.recharge and not self.curr_shoot_cooldown:
@@ -81,6 +78,20 @@ class Gun():
 
         self.prev_mouse_buttons = mouse_buttons
 
+    def get_angle(self, target, enemy=False):
+        pos_x, pos_y = target
+        
+        if not enemy:
+            # Calcular o ângulo do mouse comparado com a arma
+            dist_x = pos_x - self.rect.centerx + camera.x
+            dist_y = pos_y - self.rect.centery + camera.y
+            self.angle = math.degrees(math.atan2(-dist_y, dist_x))
+        else:
+            # Calcula o ângulo entre a arma e o jogador
+            dist_x = pos_x - self.rect.centerx 
+            dist_y = pos_y - self.rect.centery 
+            self.angle = math.degrees(math.atan2(-dist_y, dist_x))
+
     def shoot(self):
         if self.equiped == True:
 
@@ -88,18 +99,18 @@ class Gun():
             bullet_surface = pygame.image.load('Img/other/laser_blt.png')
             rotated_bullet_surface = pygame.transform.rotate(bullet_surface, self.angle)
             bullet = rotated_bullet_surface.get_rect()
-            bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y + self.rect.height // 4
+            bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y
         
             #calcula a velocidade y e x da bala 
             radians = math.radians(-self.angle)
-            cos_mouse = math.cos(radians)
-            sin_mouse = math.sin(radians)
+            cos = math.cos(radians)
+            sin = math.sin(radians)
             
             bullet_info = {
                 "surface": rotated_bullet_surface,
                 "rect": bullet,
-                "speed_x": self.blt_speed * cos_mouse,
-                "speed_y": self.blt_speed * sin_mouse,
+                "speed_x": self.blt_speed * cos,
+                "speed_y": self.blt_speed * sin,
                 "time_to_live": self.blt_time
             }
             self.blts.append(bullet_info)
@@ -135,12 +146,12 @@ class Gun():
         pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo * 3, 20))
         pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo * 3, 20))
 
-    def draw_gun(self, screen, plr):
-        pos_x, pos_y = pygame.mouse.get_pos()
+    def draw_gun(self, screen, holder, target):
+        pos_x, pos_y = target
 
-        if pos_x <= plr.rect.x - camera.x:
+        if pos_x <= holder.rect.x - camera.x:
             self.hand = 'left'
-        elif pos_x >= plr.rect.x + plr.rect.width  - camera.x:
+        elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
             self.hand = 'right'
 
         # Detecta se o jogador está apontando para direita ou esquerda
@@ -149,19 +160,25 @@ class Gun():
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
             self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
 
-            self.rect.centerx = plr.rect.centerx - (plr.rect.width // 2)
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.centerx - (holder.rect.width // 2)
+            self.rect.centery = holder.rect.centery
 
             screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
         elif self.hand == 'right':
             self.rotated_image = pygame.transform.rotate(self.image, self.angle)
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
 
-            self.rect.centerx = plr.rect.centerx + (plr.rect.width // 2)
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.centerx + (holder.rect.width // 2)
+            self.rect.centery = holder.rect.centery
 
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
+    # arma para o inimigo
+    def update_enemy(self, enemy, screen, plr):
+        self.draw_gun(screen, enemy, (plr.rect.centerx - camera.x, plr.rect.centery - camera.y))
+        self.get_angle((plr.rect.centerx, plr.rect.centery), enemy=True)
+
+        self.handle_bullets(screen)
 
 #------------------Arma Laser------------------------------------------
 class Laser_gun():
