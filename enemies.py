@@ -8,9 +8,10 @@ class Enemy():
         self.surface = pygame.surface.Surface((50, 50))
         self.surface.fill((80, 190, 255))
         self.rect = self.surface.get_rect()
-        self.rect.x, self.rect.y = x - camera.x, y - camera.y
+        self.rect.x, self.rect.y = x, y
 
         # Enemy status
+        self.max_life = life
         self.life = life
         self.ammo = ammo
         self.curr_ammo = ammo
@@ -34,8 +35,9 @@ class Enemy():
 
         self.look_player(player)
         self.move()
+        self.show_life(screen)
 
-        if curr_time - self.last_shot > self.shoot_cooldown:
+        if curr_time - self.last_shot > self.shoot_cooldown and self.action == 'pursuing':
             self.gun.shoot()
             self.last_shot = curr_time
 
@@ -59,12 +61,12 @@ class Enemy():
         sin = math.sin(radians)
         
         if self.dist < 350: 
-            self.action = 'persuing'
+            self.action = 'pursuing'
         else:
             self.action = 'idle'
 
         # movimenta o inimigo se o player estiver dentro do alcance
-        if self.action == 'persuing': 
+        if self.action == 'pursuing': 
             self.rect.x += self.speed_x
             self.rect.y += self.speed_y
             if self.dist > 200:
@@ -86,3 +88,7 @@ class Enemy():
             self.speed_y *= 0.9
         else:
             self.speed_y = 0
+
+    def show_life(self, screen):
+        pygame.draw.rect(screen, (255, 0, 0), (self.rect.x - camera.x, self.rect.y - camera.y - 16, self.rect.width, 10))
+        pygame.draw.rect(screen, (255, 255, 0), (self.rect.x - camera.x, self.rect.y - 16 - camera.y, self.rect.width * (self.life/self.max_life), 10))

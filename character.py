@@ -10,6 +10,7 @@ class Player():
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.max_life = life
         self.life = life
         self.equiped = False
         self.speed = 5
@@ -41,6 +42,7 @@ class Player_rect():
         self.rect = self.surface.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.max_life = life
         self.life = life
         self.equiped = False
         self.speed = 5
@@ -73,7 +75,7 @@ class Player_rect():
 
     def draw_life(self, screen):
         #desenha a vida do jogador na tela
-        pygame.draw.rect(screen, (255, 0, 0), (50, 20, self.life * 2, 15))
+        pygame.draw.rect(screen, (255, 0, 0), (50, 20, self.max_life * 2, 15))
         pygame.draw.rect(screen, (0, 255, 0), (50, 20, self.life * 2, 15))
 
     def show_ammo_packs(self, screen):

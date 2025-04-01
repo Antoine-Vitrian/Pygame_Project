@@ -28,6 +28,9 @@ class Gun():
         self.equiped = False
         self.x = (0, 0, 0) 
         self.hand = 'right'
+        
+        # balas
+        self.damage = 20
         self.shoot_cooldown = shoot_cooldown
         self.curr_shoot_cooldown = 0
         self.auto_shoot = auto_shoot
@@ -92,6 +95,34 @@ class Gun():
             dist_y = pos_y - self.rect.centery 
             self.angle = math.degrees(math.atan2(-dist_y, dist_x))
 
+    def draw_gun(self, screen, holder, target):
+        pos_x, pos_y = target
+
+        if pos_x <= holder.rect.x - camera.x:
+            self.hand = 'left'
+        elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
+            self.hand = 'right'
+
+        # Detecta se o jogador está apontando para direita ou esquerda
+        if self.hand == 'left':
+            self.rotated_image = pygame.transform.rotate(self.image, -self.angle)
+            self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+            self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
+
+            self.rect.centerx = holder.rect.centerx - (holder.rect.width // 2)
+            self.rect.centery = holder.rect.centery
+
+            screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+        elif self.hand == 'right':
+            self.rotated_image = pygame.transform.rotate(self.image, self.angle)
+            self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
+
+            self.rect.centerx = holder.rect.centerx + (holder.rect.width // 2)
+            self.rect.centery = holder.rect.centery
+
+            screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
+
+
     def shoot(self):
         if self.equiped == True:
 
@@ -128,6 +159,13 @@ class Gun():
             else:
                 self.blts.remove(bullet)
 
+    def check_collision(self, target):
+        for bullet in self.blts:
+            if bullet["rect"].colliderect(target):
+                target.life -= self.damage
+                
+                self.blts.remove(bullet)
+
     def recharging(self, screen):
         if self.curr_recharge_time:
             self.curr_recharge_time -= 1
@@ -145,33 +183,6 @@ class Gun():
         # Desenha a munição da arma
         pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo * 3, 20))
         pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo * 3, 20))
-
-    def draw_gun(self, screen, holder, target):
-        pos_x, pos_y = target
-
-        if pos_x <= holder.rect.x - camera.x:
-            self.hand = 'left'
-        elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
-            self.hand = 'right'
-
-        # Detecta se o jogador está apontando para direita ou esquerda
-        if self.hand == 'left':
-            self.rotated_image = pygame.transform.rotate(self.image, -self.angle)
-            self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
-            self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
-
-            self.rect.centerx = holder.rect.centerx - (holder.rect.width // 2)
-            self.rect.centery = holder.rect.centery
-
-            screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
-        elif self.hand == 'right':
-            self.rotated_image = pygame.transform.rotate(self.image, self.angle)
-            self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
-
-            self.rect.centerx = holder.rect.centerx + (holder.rect.width // 2)
-            self.rect.centery = holder.rect.centery
-
-            screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
     # arma para o inimigo
     def update_enemy(self, enemy, screen, plr):
@@ -193,7 +204,12 @@ class Laser_gun():
         self.ammo = ammo
         self.curr_ammo = ammo
         self.overheat_timer = 0
-        
+
+        # laser
+        self.damage = 0.1
+        self.damage_cooldown = 100
+        self.last_hit = pygame.time.get_ticks()
+        self.shooting = False
 
         # outras coisas da arma
         self.equiped = False
@@ -232,12 +248,13 @@ class Laser_gun():
             # lógica para atirar
             if mouse_buttons[0] and self.overheat_timer == 0:
                 if self.curr_ammo > 0:
+                    self.shooting = True
                     pygame.draw.line(screen, (255, 255, 0), *self.get_laser_pos(), 3)
                     self.curr_ammo -= 1
                 else:
                     self.overheat_timer = 120
-
-
+            else:
+                self.shooting = False
         
         # Recarrega enquanto a munição é menor que a munição máxima e não está atirando
         if (self.curr_ammo < self.ammo and not mouse_buttons[0]) or self.overheat_timer and self.curr_ammo <= self.ammo:
@@ -286,6 +303,20 @@ class Laser_gun():
 
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
+    def check_collision(self, target):
+        if self.shooting == True:
+            (laser_ix, laser_iy), (laser_fx, laser_fy) = self.get_laser_pos()
+
+            current_time = pygame.time.get_ticks()
+
+            target_position = pygame.rect.Rect(target.rect.x - camera.x, target.rect.y - camera.y, target.rect.width, target.rect.height)
+
+            for i in range(0, 201):
+                px = laser_ix + (laser_fx - laser_ix) * i / 200
+                py = laser_iy + (laser_fy - laser_iy) * i / 200
+                if target_position.collidepoint(px, py) and current_time - self.last_hit >= self.damage_cooldown:
+                    target.life -= self.damage
+
     def draw_ammo(self, screen):
         # Desenha a munição da arma
         pygame.draw.rect(screen, (80, 80, 80), (50, 50, self.ammo, 20))
@@ -298,17 +329,13 @@ class Laser_gun():
 
     def get_laser_pos(self):
         pos_x, pos_y = pygame.mouse.get_pos()
-        
-        #calcula a ponta do laser
-        laser_tip_x = pos_x
-        laser_tip_y = pos_y
 
         #calcula a ponta da arma de onde deveria sair o laser usando seno e cosseno
         radians = math.radians(self.angle)
         laser_start_x = self.rect.centerx + (self.rect.width * math.cos(radians)) // 2
         laser_start_y = (self.rect.centery - (self.rect.width * math.sin(radians)) // 2) - self.rect.width // 4
         
-        return (laser_start_x - camera.x, laser_start_y - camera.y), (laser_tip_x, laser_tip_y)
+        return (laser_start_x - camera.x, laser_start_y - camera.y), (pos_x, pos_y)
     
 
 #--------------------------Basuca--------------------------------------------
@@ -329,8 +356,14 @@ class Bazooka():
         self.recharge = False
 
         # Projetil
+        self.projectile_damage = 30
         self.shoot_cooldown = 30
         self.curr_shoot_cooldown = 0
+
+        # Explosão
+        self.explosions = []
+        self.explosion_damage = 1
+        self.explosion_cooldown = 150
 
         # Animação
         self.sprite_image = pygame.image.load(sprite_sheet)
@@ -370,11 +403,6 @@ class Bazooka():
 
             # Posição do mouse    
             pos_x, pos_y = pygame.mouse.get_pos()
-
-            # Calcular o ângulo do mouse comparado com a arma
-            # dist_x = pos_x - self.rect.centerx + camera.x
-            # dist_y = pos_y - self.rect.centery + camera.y
-            # self.angle = math.degrees(math.atan2(-dist_y, dist_x))
 
             self.get_angle() #calcula o ângulo com vetores
 
@@ -437,7 +465,7 @@ class Bazooka():
                 "speed_x": self.blt_speed * cos_mouse,
                 "speed_y": self.blt_speed * sin_mouse,
                 "time_to_live": time,
-                "explosion_time": len(self.animation_list[self.explosion_action]),
+                "explosion": 0,
                 "exploded": False
             })
 
@@ -457,30 +485,55 @@ class Bazooka():
             if bullet.get("time_to_live"):
                 bullet["time_to_live"] -= 1
                 screen.blit(bullet["frames_img"][bullet["frame"]], (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
-            else:
-                bullet["speed_x"] = 0
-                bullet["speed_y"] = 0
-                if bullet["frame"] < len(self.animation_list[self.explosion_action]):
-                    self.explosion(screen, bullet)
-                else:
-                    self.blts.remove(bullet)
-
             
+            else:
+                self.explosion(screen, bullet)
+
+    def check_collision(self, target):
+        curr_tick = pygame.time.get_ticks()
+
+        for bullet in self.blts:
+            if bullet["rect"].colliderect(target) and bullet["time_to_live"]:
+                target.life -= self.projectile_damage
+                bullet["time_to_live"] = 0
+
+            if bullet["explosion"] and curr_tick - bullet["explosion"]["last_tick"] >= bullet["explosion"]["explosion_cooldown"]:
+                if bullet["explosion"]["rect"].colliderect(target):
+                    target.life -= self.explosion_damage
+
     def explosion(self, screen, bullet):
-        if not bullet.get("exploded"):
+        explosion_frames = self.animation_list[self.explosion_action]
+        
+        if not bullet.get("exploded"): # caso seja a primeira vez que a função for chamada
             bullet["frame"] = 0
             bullet["exploded"] = True
-        else:        
-            explosion_frames = self.animation_list[self.explosion_action]
-            for i in range(len(explosion_frames)):
+            bullet["speed_x"], bullet["speed_y"] = 0, 0
+
+        elif bullet["frame"] <= len(self.animation_list[self.explosion_action]) - 1: # lógica durante a explosão do projétil (termina quando os frames acabam)
+            for i in range(len(explosion_frames)): # muda o tamanho da explosão
                 explosion_frames[i] = pygame.transform.scale(explosion_frames[i], (self.sprite_width * 3, self.sprite_height * 3))
                 explosion_frames[i].set_colorkey((0, 0, 0))
             exp_surf = explosion_frames[bullet["frame"]]
             exp_width, exp_height = exp_surf.get_width(), exp_surf.get_height()
+            exp_rect = exp_surf.get_rect()
+            exp_rect.x = bullet.get("rect").centerx - exp_width//2 
+            exp_rect.y = bullet.get("rect").centery - exp_height//2
+
+            explosion = {
+                "rect": exp_rect,
+                "last_tick": pygame.time.get_ticks(),
+                "explosion_cooldown": 80
+            }
+
+            if not bullet["explosion"]:
+                bullet["explosion"] = explosion
 
             # lida com a animação da explosão
-            screen.blit(exp_surf, (bullet.get("rect").centerx - exp_width//2 - camera.x, bullet.get("rect").centery - exp_height//2 - camera.y))
-            bullet["explosion_time"] -= 1
+            screen.blit(exp_surf, (exp_rect.x - camera.x, exp_rect.y - camera.y))
+
+        else:
+            self.blts.remove(bullet)
+
 
     def recharging(self, screen):
         if self.curr_recharge_time:

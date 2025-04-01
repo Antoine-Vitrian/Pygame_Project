@@ -39,6 +39,7 @@ bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_co
 
 # inimigos
 soldier = Enemy(500, 500, '', 80, 60, 0.4)
+soldier2 = Enemy(600, 800, '', 80, 60, 0.4)
 
 enemy_limit = 10
 
@@ -48,7 +49,7 @@ bazooka_pack = AmmoPack(500, 300, 'bazooka', 0.7)
 
 loaded_guns = [gun, pistol, laser_gun, bazooka]
 loaded_items = [ammo_pack, bazooka_pack]
-loaded_enemies = [soldier]
+loaded_enemies = [soldier, soldier2]
 
 def item_handler(items):
     for item in items:
@@ -59,7 +60,18 @@ def item_handler(items):
 
 def enemies_handler(enemies, screen, player):
     for enemy in enemies:
-        enemy.update(screen, player)
+        if enemy.life > 0:
+            enemy.update(screen, player)
+        else:
+            enemies.remove(enemy)
+
+def check_blt_collisions(player, enemies):
+    for enemy in enemies: # checa tiros do player
+        for gun in loaded_guns:
+            gun.check_collision(enemy)
+        
+        # checa tiros dos inimigos
+        enemy.gun.check_collision( player)
 
 def update_screen(player, guns, camera, enemies):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
@@ -86,16 +98,18 @@ def game():
 
         update_screen(player, loaded_guns, camera, loaded_enemies) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
-        
+        # collisions
+        check_blt_collisions(player, loaded_enemies)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-            # if event.type == pygame.KEYDOWN:
-            #     if event.key == pygame.K_t:
-            #         print(player.surface, player.rect)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_t:
+                    soldier.life = soldier.max_life
+                    soldier2.life = soldier.max_life
 
             if event.type == EQUIP_EVENT:
                 player.equip()
