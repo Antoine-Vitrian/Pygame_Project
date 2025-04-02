@@ -9,6 +9,7 @@ from camera import camera
 from game_map import *
 from itens import AmmoPack
 from sprites import *
+from button import Button
 
 pygame.init()
 
@@ -27,6 +28,10 @@ tile_kinds = [
 ]
 map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
+# Botões
+start_btn_img = pygame.image.load('Img/btns/start_btn.png')
+start_btn = Button(SCREEN_HEIGHT//2, SCREEN_WIDTH//2, start_btn_img, 5)
+
 # Jogador
 plr_col = (255, 150, 100)
 player = Player_rect(300, 200, 100, plr_col)
@@ -38,8 +43,8 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
 # inimigos
-soldier = Enemy(500, 500, '', 80, 60, 0.4)
-soldier2 = Enemy(600, 800, '', 80, 60, 0.4)
+soldier = Enemy(500, 500, '', 80, 60, 0.2)
+soldier2 = Enemy(600, 800, '', 80, 60, 0.2)
 
 enemy_limit = 10
 
@@ -49,7 +54,37 @@ bazooka_pack = AmmoPack(500, 300, 'bazooka', 0.7)
 
 loaded_guns = [gun, pistol, laser_gun, bazooka]
 loaded_items = [ammo_pack, bazooka_pack]
-loaded_enemies = [soldier, soldier2]
+loaded_enemies = [soldier]
+
+def main_menu():
+    menu = True
+    while menu:
+        screen.fill((80, 200, 255))
+
+        start_btn.draw(screen)
+
+        if start_btn.clicked:
+            game()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
+        
+def game_over():
+    game_over_menu = True
+    while game_over_menu:
+
+        screen.fill((255, 200, 180))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
 
 def item_handler(items):
     for item in items:
@@ -116,11 +151,14 @@ def game():
             elif event.type == DEQUIP_EVENT:   
                 player.dequip()
 
+        if not player.life:
+            game_over()
+
         
         pygame.display.flip()
 
 if __name__ == "__main__":
-    game()
+    main_menu()
 
 pygame.quit()
 sys.exit()

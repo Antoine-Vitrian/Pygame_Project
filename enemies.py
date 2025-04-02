@@ -53,7 +53,14 @@ class Enemy():
 
         # calcula o ângulo entre o inimigo e o player
         radians = math.atan2(dist_y, dist_x)
-        self.angle = math.degrees(radians)
+        target_angle = math.degrees(radians)
+        
+        if self.angle + 180 <= target_angle + 180:
+            self.angle += 5
+        elif self.angle + 180 >= target_angle + 180:
+            self.angle -= 5
+        
+        print(self.angle)
 
     def move(self):
         radians = math.radians(self.angle)
