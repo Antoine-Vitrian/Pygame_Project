@@ -100,8 +100,10 @@ class Gun():
 
         if pos_x <= holder.rect.x - camera.x:
             self.hand = 'left'
+            holder.direction = 'left'
         elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
             self.hand = 'right'
+            holder.direction = 'right'
 
         # Detecta se o jogador está apontando para direita ou esquerda
         if self.hand == 'left':
@@ -110,7 +112,7 @@ class Gun():
             self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
 
             self.rect.centerx = holder.rect.centerx - (holder.rect.width // 2)
-            self.rect.centery = holder.rect.centery
+            self.rect.centery = holder.rect.centery + holder.rect.height // 5
 
             screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
         elif self.hand == 'right':
@@ -118,7 +120,7 @@ class Gun():
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
 
             self.rect.centerx = holder.rect.centerx + (holder.rect.width // 2)
-            self.rect.centery = holder.rect.centery
+            self.rect.centery = holder.rect.centery + holder.rect.height // 5
 
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
@@ -277,13 +279,15 @@ class Laser_gun():
         if direction.length() > 0:
             self.angle = direction.angle_to(pygame.Vector2(1, 0))
 
-    def draw_gun(self, screen, plr):
+    def draw_gun(self, screen, holder):
         pos_x, pos_y = pygame.mouse.get_pos()
 
-        if pos_x <= plr.rect.x - camera.x:
+        if pos_x <= holder.rect.x - camera.x:
             self.hand = 'left'
-        elif pos_x >= plr.rect.x + plr.rect.width  - camera.x:
+            holder.direction = 'left'
+        elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
             self.hand = 'right'
+            holder.direction = 'right'
 
         # Detecta se o jogador está apontando para direita ou esquerda
         if self.hand == 'left':
@@ -293,16 +297,16 @@ class Laser_gun():
             self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
 
             # Define o centro da arma
-            self.rect.centerx = plr.rect.x
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.x
+            self.rect.centery = holder.rect.centery + holder.rect.height//5
 
             screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
         elif self.hand == 'right':
             self.rotated_image = pygame.transform.rotate(self.image, self.angle)
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
 
-            self.rect.centerx = plr.rect.x + plr.rect.width
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.x + holder.rect.width
+            self.rect.centery = holder.rect.centery + holder.rect.height//5
 
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
@@ -556,13 +560,15 @@ class Bazooka():
         pygame.draw.rect(screen, (0, 200, 255), (50, 50, self.curr_ammo * 5, 20))
 
     #--------------arma-----------------
-    def draw_gun(self, screen, plr):
+    def draw_gun(self, screen, holder):
         pos_x, pos_y = pygame.mouse.get_pos()
 
-        if pos_x <= plr.rect.x - camera.x:
+        if pos_x <= holder.rect.x - camera.x:
             self.hand = 'left'
-        elif pos_x >= plr.rect.x + plr.rect.width  - camera.x:
+            holder.direction = 'left'
+        elif pos_x >= holder.rect.x + holder.rect.width  - camera.x:
             self.hand = 'right'
+            holder.direction = 'right'
 
         # Detecta se o jogador está apontando para direita ou esquerda
         if self.hand == 'left':
@@ -570,16 +576,16 @@ class Bazooka():
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
             self.fliped_image = pygame.transform.flip(self.rotated_image, False, True)
 
-            self.rect.centerx = plr.rect.centerx - (plr.rect.width // 2)
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.x
+            self.rect.centery = holder.rect.centery + holder.rect.height//5
 
             screen.blit(self.fliped_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
         elif self.hand == 'right':
             self.rotated_image = pygame.transform.rotate(self.image, self.angle)
             self.rotated_rect = self.rotated_image.get_rect(center=self.rect.center)
 
-            self.rect.centerx = plr.rect.centerx + (plr.rect.width // 2)
-            self.rect.centery = plr.rect.centery
+            self.rect.centerx = holder.rect.centerx + (holder.rect.width // 2)
+            self.rect.centery = holder.rect.centery + holder.rect.height//5
 
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
