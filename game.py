@@ -2,7 +2,7 @@ import pygame
 import sys
 from random import randrange, randint
 
-from character import Player_rect
+from character import Player
 from guns import *
 from enemies import Enemy
 from camera import camera
@@ -34,11 +34,12 @@ fundo_menu = pygame.image.load('Img/logo/fundo_menu.jpg')
 
 # Botões
 start_btn_img = pygame.image.load('Img/btns/start_btn.png')
-start_btn = Button(275, 400, start_btn_img, 5)
+start_btn = Button(SCREEN_HEIGHT//2, SCREEN_WIDTH//2, start_btn_img, 3)
+# start_btn.rect.x -= start_btn.rect.width//2
+start_btn.rect.y -= start_btn.rect.height
 
 # Jogador
-plr_col = (255, 150, 100)
-player = Player_rect(300, 200, 100, plr_col)
+player = Player(300, 300, 120, 'Img/characters/main_character.png', 2, animation_cooldown, [8, 4], 34, 46,)
 
 # Armas
 gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
@@ -47,7 +48,7 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
 # inimigos
-enemy_limit = 10
+enemy_limit = 10000
 loaded_enemies = []
 spawn_cooldown = 1000 # em ms
 last_spawned_enemy = pygame.time.get_ticks()
@@ -180,8 +181,8 @@ def game():
             elif event.type == DEQUIP_EVENT:   
                 player.dequip()
 
-        # if not player.life:
-        #     game_over()
+        if not player.life:
+            game_over()
 
         
         pygame.display.flip()
