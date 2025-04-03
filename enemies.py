@@ -22,7 +22,7 @@ class Enemy():
         self.action = 'idle'
 
         # arma do inimigo
-        self.gun = Gun(self.rect.x, self.rect.y, 30, 'Img/Armas/Arma_Soldado_inimigo.png', 12, 80, 20, False)
+        self.gun = Gun(self.rect.x, self.rect.y, 30, 'Img/Armas/Arma_Soldado_inimigo.png', 8, 80, 20, False)
         self.gun.equiped = True
         self.last_shot = pygame.time.get_ticks()
         self.shoot_cooldown = 1700 # cooldown para o inimigo atacar
@@ -38,7 +38,7 @@ class Enemy():
         self.show_life(screen)
 
         if curr_time - self.last_shot > self.shoot_cooldown and self.action == 'pursuing':
-            self.gun.shoot()
+            self.gun.shoot(enemy=True)
             self.last_shot = curr_time
 
         screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
@@ -54,23 +54,22 @@ class Enemy():
         # calcula o ângulo entre o inimigo e o player
         radians = math.atan2(dist_y, dist_x)
         target_angle = math.degrees(radians)
+
+        # Área de agressão 
+        if self.dist < 500: 
+            self.action = 'pursuing'
+        else:
+            self.action = 'idle'
         
         if self.angle + 180 <= target_angle + 180:
             self.angle += 5
         elif self.angle + 180 >= target_angle + 180:
             self.angle -= 5
-        
-        print(self.angle)
 
     def move(self):
         radians = math.radians(self.angle)
         cos = math.cos(radians)
         sin = math.sin(radians)
-        
-        if self.dist < 350: 
-            self.action = 'pursuing'
-        else:
-            self.action = 'idle'
 
         # movimenta o inimigo se o player estiver dentro do alcance
         if self.action == 'pursuing': 

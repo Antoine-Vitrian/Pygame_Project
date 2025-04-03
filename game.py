@@ -1,6 +1,6 @@
 import pygame
 import sys
-import random
+from random import randrange, randint
 
 from character import Player_rect
 from guns import *
@@ -43,10 +43,12 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
 # inimigos
-soldier = Enemy(500, 500, '', 80, 60, 0.2)
-soldier2 = Enemy(600, 800, '', 80, 60, 0.2)
-
 enemy_limit = 10
+loaded_enemies = []
+spawn_cooldown = 1000 # em ms
+last_spawned_enemy = pygame.time.get_ticks()
+spawn_chance = 0
+
 
 # Munições
 ammo_pack = AmmoPack(500, 200, 'gun', 0.7)
@@ -54,7 +56,8 @@ bazooka_pack = AmmoPack(500, 300, 'bazooka', 0.7)
 
 loaded_guns = [gun, pistol, laser_gun, bazooka]
 loaded_items = [ammo_pack, bazooka_pack]
-loaded_enemies = [soldier]
+
+# Telas
 
 def main_menu():
     menu = True
@@ -86,6 +89,9 @@ def game_over():
 
         pygame.display.flip()
 
+
+# Funções para o jogo
+
 def item_handler(items):
     for item in items:
         if item.droped == True:
@@ -94,6 +100,29 @@ def item_handler(items):
             loaded_items.remove(item)
 
 def enemies_handler(enemies, screen, player):
+    current_time = pygame.time.get_ticks()
+    global last_spawned_enemy
+    global spawn_chance
+
+    enemy_spawn_x = randrange(len(map.tiles[0] * map.tile_size))
+    enemy_spawn_y = randrange(len(map.tiles * map.tile_size))
+
+    # Gerenciar spawn de inimigos
+    while enemy_spawn_x >= camera.x and enemy_spawn_x <= camera.x + camera.width:
+        enemy_spawn_x = randrange(len(map.tiles[0] * map.tile_size))
+    while enemy_spawn_y >= camera.y and enemy_spawn_y <= camera.y + camera.height:
+        enemy_spawn_y = randrange(len(map.tiles * map.tile_size))
+
+    if current_time - last_spawned_enemy >= spawn_cooldown:
+        spawn_chance += randint(0, 5)
+        last_spawned_enemy = current_time
+        if spawn_chance >= 5 and len(enemies) <= enemy_limit:
+            soldier = Enemy(enemy_spawn_x, enemy_spawn_y, '', 80, 60, 0.2)
+            enemies.append(soldier)
+            spawn_chance = 0
+            print('enemy spawned')
+
+    # Lógica para desenhar inimigos na tela e eliminar inimigos mortos
     for enemy in enemies:
         if enemy.life > 0:
             enemy.update(screen, player)
@@ -108,15 +137,11 @@ def check_blt_collisions(player, enemies):
         # checa tiros dos inimigos
         enemy.gun.check_collision( player)
 
-def update_screen(player, guns, camera, enemies):
+def update_screen(player, guns, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(map.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
 
-    item_handler(loaded_items)
-
     player.update(screen)
-
-    enemies_handler(enemies, screen, player)
 
     for gun in guns:
         gun.update(player, screen)
@@ -131,7 +156,10 @@ def game():
 
         map.draw(screen) # desenha o mapa (background)
 
-        update_screen(player, loaded_guns, camera, loaded_enemies) # desenha o jogo e os objetos (precisa estar depois do mapa)
+        item_handler(loaded_items)
+        enemies_handler(loaded_enemies, screen, player)
+        
+        update_screen(player, loaded_guns, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         # collisions
         check_blt_collisions(player, loaded_enemies)
@@ -141,18 +169,14 @@ def game():
                 pygame.quit()
                 sys.exit()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_t:
-                    soldier.life = soldier.max_life
-                    soldier2.life = soldier.max_life
 
             if event.type == EQUIP_EVENT:
                 player.equip()
             elif event.type == DEQUIP_EVENT:   
                 player.dequip()
 
-        if not player.life:
-            game_over()
+        # if not player.life:
+        #     game_over()
 
         
         pygame.display.flip()

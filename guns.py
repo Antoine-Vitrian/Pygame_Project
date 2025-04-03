@@ -123,11 +123,14 @@ class Gun():
             screen.blit(self.rotated_image, (self.rotated_rect.x - camera.x, self.rotated_rect.y - camera.y))
 
 
-    def shoot(self):
+    def shoot(self, enemy=False):
         if self.equiped == True:
 
             #criando a bala e transformando para ficar com o ângulo correto
-            bullet_surface = pygame.image.load('Img/other/laser_blt.png')
+            if not enemy:
+                bullet_surface = pygame.image.load('Img/other/laser_blt.png')
+            else:
+                bullet_surface = pygame.image.load('Img/other/enemy_blt.png')
             rotated_bullet_surface = pygame.transform.rotate(bullet_surface, self.angle)
             bullet = rotated_bullet_surface.get_rect()
             bullet.x, bullet.y = self.rect.x + self.rect.width // 2, self.rect.y
@@ -362,7 +365,7 @@ class Bazooka():
 
         # Explosão
         self.explosions = []
-        self.explosion_damage = 1
+        self.explosion_damage = 3
         self.explosion_cooldown = 150
 
         # Animação

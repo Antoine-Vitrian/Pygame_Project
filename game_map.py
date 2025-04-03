@@ -4,10 +4,10 @@ import csv
 
 TILES_SIZE = 32
 0
-SCREEN_WIDTH = TILES_SIZE * 20
-SCREEN_HEIGHT = TILES_SIZE * 16
+SCREEN_WIDTH = TILES_SIZE * 25
+SCREEN_HEIGHT = TILES_SIZE * 20
 
-screen = create_screen(SCREEN_WIDTH, SCREEN_HEIGHT, 'Scrolling test')
+screen = create_screen(SCREEN_WIDTH, SCREEN_HEIGHT, 'game')
 
 class Tile_kind:
     def __init__(self, name, image, is_solid):
