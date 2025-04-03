@@ -28,9 +28,13 @@ tile_kinds = [
 ]
 map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
+# Menu
+menu_logo = pygame.image.load('Img/logo/logo_semfundo.png')
+fundo_menu = pygame.image.load('Img/logo/fundo_menu.jpg')
+
 # Botões
 start_btn_img = pygame.image.load('Img/btns/start_btn.png')
-start_btn = Button(SCREEN_HEIGHT//2, SCREEN_WIDTH//2, start_btn_img, 5)
+start_btn = Button(275, 400, start_btn_img, 5)
 
 # Jogador
 plr_col = (255, 150, 100)
@@ -62,7 +66,8 @@ loaded_items = [ammo_pack, bazooka_pack]
 def main_menu():
     menu = True
     while menu:
-        screen.fill((80, 200, 255))
+        screen.blit(fundo_menu,(0, 0))
+        screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
 
         start_btn.draw(screen)
 
