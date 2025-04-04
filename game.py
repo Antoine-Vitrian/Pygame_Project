@@ -35,11 +35,11 @@ fundo_menu = pygame.image.load('Img/logo/fundo_menu.jpg')
 # Botões
 start_btn_img = pygame.image.load('Img/btns/start_btn.png')
 start_btn = Button(SCREEN_HEIGHT//2, SCREEN_WIDTH//2, start_btn_img, 3)
-# start_btn.rect.x -= start_btn.rect.width//2
-start_btn.rect.y -= start_btn.rect.height
+start_btn.rect.x -= start_btn.rect.width//2
+start_btn.rect.y -= start_btn.rect.height//2
 
 # Jogador
-player = Player(300, 300, 200, 'Img/characters/main_character.png', 2, animation_cooldown, [8, 4], 34, 46,)
+player = Player(300, 300, 1, 'Img/characters/main_character.png', 2, animation_cooldown, [8, 4], 34, 46,)
 
 # Armas
 gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
@@ -48,7 +48,7 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
 # inimigos
-enemy_limit = 1
+enemy_limit = 10
 loaded_enemies = []
 spawn_cooldown = 1000 # em ms
 last_spawned_enemy = pygame.time.get_ticks()
@@ -70,9 +70,7 @@ def main_menu():
         screen.blit(fundo_menu,(0, 0))
         screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
 
-        start_btn.draw(screen)
-
-        if start_btn.clicked:
+        if start_btn.draw(screen):
             game()
 
         for event in pygame.event.get():
@@ -87,6 +85,9 @@ def game_over():
     while game_over_menu:
 
         screen.fill((0, 0, 0))
+
+        if start_btn.draw(screen):
+            game_over_menu = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -181,8 +182,9 @@ def game():
             elif event.type == DEQUIP_EVENT:   
                 player.dequip()
 
-        if not player.life:
+        if player.life < 0:
             game_over()
+            run = False
 
         
         pygame.display.flip()

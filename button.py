@@ -23,7 +23,7 @@ class Button():
             if pygame.mouse.get_pressed()[0] and self.clicked == False:
                 self.clicked = True
                 action = True
-            if not pygame.mouse.get_pressed()[0]:
+            if not pygame.mouse.get_pressed()[0] and self.clicked == True:
                 self.clicked = False
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
