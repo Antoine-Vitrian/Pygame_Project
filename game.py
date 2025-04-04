@@ -39,7 +39,7 @@ start_btn = Button(SCREEN_HEIGHT//2, SCREEN_WIDTH//2, start_btn_img, 3)
 start_btn.rect.y -= start_btn.rect.height
 
 # Jogador
-player = Player(300, 300, 120, 'Img/characters/main_character.png', 2, animation_cooldown, [8, 4], 34, 46,)
+player = Player(300, 300, 200, 'Img/characters/main_character.png', 2, animation_cooldown, [8, 4], 34, 46,)
 
 # Armas
 gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
@@ -48,7 +48,7 @@ laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
 bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
 # inimigos
-enemy_limit = 10000
+enemy_limit = 1
 loaded_enemies = []
 spawn_cooldown = 1000 # em ms
 last_spawned_enemy = pygame.time.get_ticks()
@@ -86,7 +86,7 @@ def game_over():
     game_over_menu = True
     while game_over_menu:
 
-        screen.fill((255, 200, 180))
+        screen.fill((0, 0, 0))
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -122,7 +122,7 @@ def enemies_handler(enemies, screen, player):
     if current_time - last_spawned_enemy >= spawn_cooldown:
         spawn_chance += randint(0, 5)
         last_spawned_enemy = current_time
-        if spawn_chance >= 5 and len(enemies) <= enemy_limit:
+        if spawn_chance >= 5 and len(enemies) < enemy_limit:
             soldier = Enemy(enemy_spawn_x, enemy_spawn_y, '', 80, 60, 0.2)
             enemies.append(soldier)
             spawn_chance = 0

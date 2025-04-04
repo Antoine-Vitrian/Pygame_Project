@@ -45,45 +45,57 @@ class Enemy():
 
         self.gun.update_enemy(self, screen, player)
 
+    def angle_difference(self, a, b):
+        """Smallest difference between two angles (in radians)."""
+        diff = (b - a + math.pi) % (2 * math.pi) - math.pi
+        return diff
+
     def look_player(self, plr):
         # calcula a distância entre o jogador e o inimigo
         dist_x = plr.rect.centerx - self.rect.centerx
         dist_y = plr.rect.centery - self.rect.centery
         self.dist = (dist_x ** 2 + dist_y ** 2) ** 0.5
 
-        # calcula o ângulo entre o inimigo e o player
-        radians = math.atan2(dist_y, dist_x)
-        target_angle = math.degrees(radians)
-
         # Área de agressão 
         if self.dist < 500: 
             self.action = 'pursuing'
         else:
             self.action = 'idle'
+
+        if self.dist >= 200:
+            # calcula o ângulo entre o inimigo e o player
+            target_angle = math.atan2(dist_y, dist_x)
+        elif self.dist < 200:
+            target_angle = math.atan2(dist_y, dist_x)
+            target_angle += math.radians(90)
+
+        """Returns a new angle rotated toward target_angle by max_turn_speed."""
+        diff = self.angle_difference(self.angle, target_angle)
+
+        vel_rotacao = math.radians(2.5)
         
-        if self.angle + 180 <= target_angle + 180:
-            self.angle += 5
-        elif self.angle + 180 >= target_angle + 180:
-            self.angle -= 5
+        # Clamp the angle change to max_turn_speed
+        if abs(diff) < vel_rotacao:
+            self.angle = target_angle
+        else:
+            self.angle = self.angle + vel_rotacao * math.copysign(1, diff)
 
     def move(self):
-        radians = math.radians(self.angle)
-        cos = math.cos(radians)
-        sin = math.sin(radians)
+        cos = math.cos(self.angle)
+        sin = math.sin(self.angle)
+
 
         # movimenta o inimigo se o player estiver dentro do alcance
         if self.action == 'pursuing': 
             self.rect.x += self.speed_x
-            self.rect.y += self.speed_y
-            if self.dist > 200:
-                self.speed_x += self.acc * cos
-                self.speed_y += self.acc * sin
-            elif self.dist >= 195 and self.dist <= 200:
-                self.speed_x *= 0.6
-                self.speed_y *= 0.6
-            else:
+            self.rect.y += self.speed_y    
+            if self.dist < 180:
                 self.speed_x -= self.acc * cos
                 self.speed_y -= self.acc * sin
+            else:
+                self.speed_x += self.acc * cos
+                self.speed_y += self.acc * sin
+            print(self.dist)
 
         # desacelera o inimigo
         if self.speed_x > 0.01 or self.speed_x < -0.01:
