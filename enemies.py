@@ -57,7 +57,7 @@ class Enemy():
         self.dist = (dist_x ** 2 + dist_y ** 2) ** 0.5
 
         # Área de agressão 
-        if self.dist < 500: 
+        if self.dist < 600: 
             self.action = 'pursuing'
         else:
             self.action = 'idle'
@@ -95,7 +95,6 @@ class Enemy():
             else:
                 self.speed_x += self.acc * cos
                 self.speed_y += self.acc * sin
-            print(self.dist)
 
         # desacelera o inimigo
         if self.speed_x > 0.01 or self.speed_x < -0.01:

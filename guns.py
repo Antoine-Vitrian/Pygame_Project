@@ -42,11 +42,6 @@ class Gun():
         if self.equiped == False:
             screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y)) # desenha a arma jogada no chão
 
-            if self.rect.colliderect(plr):
-                if keys_pressed[pygame.K_e] and plr.equiped == False: # evento para equipar a arma
-                    self.equiped = True
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
-
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True: # evento para desequipar a arma
                 self.equiped = False
@@ -80,6 +75,15 @@ class Gun():
         self.handle_bullets(screen)
 
         self.prev_mouse_buttons = mouse_buttons
+
+    def check_equip(self, plr):
+        keys_pressed = pygame.key.get_pressed()
+        if self.equiped == False:
+        
+            if self.rect.colliderect(plr):
+                if keys_pressed[pygame.K_e] and plr.equiped == False:
+                    self.equiped = True
+                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self, target, enemy=False):
         pos_x, pos_y = target
@@ -230,11 +234,6 @@ class Laser_gun():
         if self.equiped == False:
             screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
-            if self.rect.colliderect(plr):
-                if keys_pressed[pygame.K_e] and plr.equiped == False:
-                    self.equiped = True
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
-
         # arma equipada
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True:
@@ -269,6 +268,15 @@ class Laser_gun():
         if self.overheat_timer > 0:
             self.overheat_timer -= 1
             self.laser = {}
+
+    def check_equip(self, plr):
+        keys_pressed = pygame.key.get_pressed()
+        if self.equiped == False:
+        
+            if self.rect.colliderect(plr):
+                if keys_pressed[pygame.K_e] and plr.equiped == False:
+                    self.equiped = True
+                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self):
         # calcula o ângulo da arma (com pygame.Vector2)
@@ -398,11 +406,6 @@ class Bazooka():
         if self.equiped == False:
             screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y)) # desenha a arma jogada no chão
 
-            if self.rect.colliderect(plr):
-                if keys_pressed[pygame.K_e] and plr.equiped == False: # evento para equipar a arma
-                    self.equiped = True
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
-
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True: # evento para desequipar a arma
                 self.equiped = False
@@ -437,6 +440,15 @@ class Bazooka():
         self.handle_bullets(screen, current_time)
 
         self.prev_mouse_buttons = mouse_buttons
+
+    def check_equip(self, plr):
+        keys_pressed = pygame.key.get_pressed()
+        if self.equiped == False:
+        
+            if self.rect.colliderect(plr):
+                if keys_pressed[pygame.K_e] and plr.equiped == False:
+                    self.equiped = True
+                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     #-----------------munição e balas-------------------------------
     def shoot(self, mouse_x, mouse_y):
