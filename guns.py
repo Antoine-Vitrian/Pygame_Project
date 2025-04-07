@@ -45,6 +45,8 @@ class Gun():
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True: # evento para desequipar a arma
                 self.equiped = False
+                plr.equiped = False
+                plr.weapon = None
                 pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
 
             # Posição do mouse    
@@ -83,6 +85,8 @@ class Gun():
             if self.rect.colliderect(plr):
                 if keys_pressed[pygame.K_e] and plr.equiped == False:
                     self.equiped = True
+                    plr.equiped = True
+                    plr.weapon = self  # define essa arma como equipada pelo jogador
                     pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self, target, enemy=False):
@@ -276,6 +280,8 @@ class Laser_gun():
             if self.rect.colliderect(plr):
                 if keys_pressed[pygame.K_e] and plr.equiped == False:
                     self.equiped = True
+                    plr.equiped = True
+                    plr.weapon = self  # define essa arma como equipada pelo jogador
                     pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self):
@@ -448,6 +454,8 @@ class Bazooka():
             if self.rect.colliderect(plr):
                 if keys_pressed[pygame.K_e] and plr.equiped == False:
                     self.equiped = True
+                    plr.equiped = True
+                    plr.weapon = self  # define essa arma como equipada pelo jogador
                     pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     #-----------------munição e balas-------------------------------

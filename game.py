@@ -49,22 +49,18 @@ player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characte
 player.rect.clamp_ip(camera)
 
 # Armas
-gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
 init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
 pistol = Gun(500, 700, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
-laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
-bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
 
-guns_limit = 5
 gun_spawn_cooldown = 13000
 last_gun_spawn = pygame.time.get_ticks()
 gun_spawn_chance = 0
 
-game_guns = [gun, laser_gun, bazooka]
+game_guns = []
 
 # inimigos
 enemy_limit = 10
-spawn_cooldown = 3500 # em ms
+spawn_cooldown = 1000 # em ms
 last_spawned_enemy = pygame.time.get_ticks()
 enemy_spawn_chance = 0
 
@@ -83,10 +79,6 @@ loaded_enemies = []
 # Telas
 
 def main_menu():
-    global loaded_enemies
-    global loaded_guns
-    global loaded_items
-
     menu = True
     while menu:
         screen.blit(fundo_menu,(0, 0))
@@ -124,19 +116,44 @@ def game_over():
 
 def reset(player):
     global loaded_enemies
+    global last_spawned_enemy
+    global enemy_spawn_chance
+    global game_guns
     global loaded_guns
-    global loaded_items 
+    global last_gun_spawn
+    global gun_spawn_chance
+    global loaded_items
+    global last_item_spawn
+    global item_spawn_chance
+
+    laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
+    bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
+    gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
+    
+    game_guns = [gun, laser_gun, bazooka]
+
+    # reseta os spawns
+    last_gun_spawn = pygame.time.get_ticks()
+    gun_spawn_chance = 0
+    last_spawned_enemy = pygame.time.get_ticks()
+    enemy_spawn_chance = 0
+    last_item_spawn = pygame.time.get_ticks()
+    item_spawn_chance = 0
 
     loaded_enemies = []
     loaded_guns = [init_pistol]
     loaded_items = []
 
-    # Reseta a arma inicial
+    # Reseta as armas
+    game_guns = [gun, laser_gun, bazooka]
     pistol = loaded_guns[0]
     pistol.rect.topleft = (PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50)
     pistol.equiped = False
     pistol.curr_ammo = pistol.ammo 
     pistol.blts = []
+
+    for gun in game_guns:
+        gun.equiped = False
 
     # Reseta o jogador
     player.equiped = False
@@ -185,7 +202,7 @@ def item_handler(items, guns):
     if current_time - last_gun_spawn >= gun_spawn_cooldown and len(game_guns):
         gun_spawn_chance += randint(0, 5)
         last_gun_spawn = current_time
-        if gun_spawn_chance >= 5 and len(guns) < guns_limit:
+        if gun_spawn_chance >= 5:
             rnd_gun = randint(0, len(game_guns) - 1)
             
             loaded_guns.append(game_guns.pop(rnd_gun))
@@ -198,7 +215,7 @@ def item_handler(items, guns):
         gun.update(player, screen)
         if gun.equiped:
             gun.draw_ammo(screen)
-        else:
+        elif not player.equiped:
             gun.check_equip(player)
 
 def enemies_handler(enemies, screen, player):
