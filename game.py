@@ -4,7 +4,7 @@ from random import randrange, randint
 
 from character import Player
 from guns import *
-from enemies import Enemy
+from enemies import Enemy, Boss1
 from camera import camera
 from game_map import *
 from itens import AmmoPack
@@ -76,6 +76,9 @@ loaded_guns = []
 loaded_items = []
 loaded_enemies = []
 
+# BOSS
+game_boss = Boss1('')
+
 # Telas
 
 def main_menu():
@@ -86,7 +89,8 @@ def main_menu():
 
         if start_btn.draw(screen):
             reset(player)
-            game()
+            if level1():
+                boss_level1()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -162,7 +166,7 @@ def reset(player):
     player.ammo_pack = INITIAL_AMMO[0]
     player.bazooka_ammo_pack = INITIAL_AMMO[1]
 
-def item_handler(items, guns):
+def item_handler(items, guns, spawn_guns=True):
     current_time = pygame.time.get_ticks()
     # Items
     global last_item_spawn
@@ -192,24 +196,25 @@ def item_handler(items, guns):
             loaded_items.remove(item)
 
     # Armas
-    global last_gun_spawn
-    global gun_spawn_chance
-    global game_guns
+    if spawn_guns == True:
+        global last_gun_spawn
+        global gun_spawn_chance
+        global game_guns
 
-    gun_x = randrange(75, len(map.tiles[0]) * map.tile_size) - 50
-    gun_y = randrange(75, len(map.tiles) * map.tile_size) - 50
+        gun_x = randrange(75, len(map.tiles[0]) * map.tile_size) - 50
+        gun_y = randrange(75, len(map.tiles) * map.tile_size) - 50
 
-    if current_time - last_gun_spawn >= gun_spawn_cooldown and len(game_guns):
-        gun_spawn_chance += randint(0, 5)
-        last_gun_spawn = current_time
-        if gun_spawn_chance >= 5:
-            rnd_gun = randint(0, len(game_guns) - 1)
-            
-            loaded_guns.append(game_guns.pop(rnd_gun))
-            loaded_guns[len(loaded_guns) - 1].rect.topleft = (gun_x, gun_y) 
-            print(loaded_guns)
+        if current_time - last_gun_spawn >= gun_spawn_cooldown and len(game_guns):
+            gun_spawn_chance += randint(0, 5)
+            last_gun_spawn = current_time
+            if gun_spawn_chance >= 5:
+                rnd_gun = randint(0, len(game_guns) - 1)
+                
+                loaded_guns.append(game_guns.pop(rnd_gun))
+                loaded_guns[len(loaded_guns) - 1].rect.topleft = (gun_x, gun_y) 
+                print(loaded_guns)
 
-            print('gun spawned')
+                print('gun spawned')
 
     for gun in guns:
         gun.update(player, screen)
@@ -247,14 +252,15 @@ def enemies_handler(enemies, screen, player):
             enemy.update(screen, player)
         else:
             enemies.remove(enemy)
+            return 1
+    return 0
 
 def check_blt_collisions(player, enemies):
     for enemy in enemies: # checa tiros do player
         for gun in loaded_guns:
             gun.check_collision(enemy)
-        
         # checa tiros dos inimigos
-        enemy.gun.check_collision( player)
+        enemy.gun.check_collision(player)
 
 def update_screen(player, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
@@ -262,6 +268,7 @@ def update_screen(player, camera):
 
     player.update(screen)
 
+    # prende o jogador na tela
     if player.speed_x > 0 and player.rect.x + player.rect.width >= len(map.tiles[0]) * map.tile_size:
             player.speed_x = 0
             player.rect.x = len(map.tiles[0]) * map.tile_size - player.rect.width
@@ -275,7 +282,31 @@ def update_screen(player, camera):
             player.speed_y = 0
             player.rect.y = 0
 
-def game():
+def boss_level1():
+
+
+    boss = True
+    while boss:
+        clock.tick(FPS)
+        
+
+        screen.fill((0, 50, 255))
+
+        update_screen(player, camera)
+        item_handler(loaded_items, [player.weapon])
+
+        game_boss.update(screen, player)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
+    
+
+def level1():
+    defeated_enemies = 0
 
     run = True
     while run:
@@ -284,8 +315,8 @@ def game():
         map.draw(screen) # desenha o mapa (background)
 
         item_handler(loaded_items, loaded_guns)
-        enemies_handler(loaded_enemies, screen, player)
-        
+        defeated_enemies += enemies_handler(loaded_enemies, screen, player)
+
         update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         # collisions
@@ -296,7 +327,6 @@ def game():
                 pygame.quit()
                 sys.exit()
 
-
             if event.type == EQUIP_EVENT:
                 player.equip()
             elif event.type == DEQUIP_EVENT:   
@@ -306,7 +336,9 @@ def game():
             game_over()
             run = False
 
-        
+        if defeated_enemies >= 2:
+            return True
+
         pygame.display.flip()
 
 if __name__ == "__main__":
