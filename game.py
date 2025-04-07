@@ -32,11 +32,19 @@ map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 menu_logo = pygame.image.load('Img/logo/logo_semfundo.png')
 fundo_menu = pygame.image.load('Img/logo/fundo_menu.jpg')
 
-# Botões
+# Game Over
+game_over_img = pygame.image.load("Img/game_over/game_over.png")
+menor_game_over = pygame.transform.smoothscale(game_over_img, (400, 400))
+
+# Botões menu
 start_btn_img = pygame.image.load('Img/btns/start_btn.png')
 start_btn = Button(SCREEN_WIDTH//2, SCREEN_HEIGHT//2, start_btn_img, 3)
 start_btn.rect.x -= start_btn.rect.width//2
 start_btn.rect.y -= start_btn.rect.height//2
+
+# Botões game over
+game_over_btn_img = pygame.image.load('Img/game_over/botao12.png')
+game_over_btn = Button(400, 500, game_over_btn_img, 3)
 
 # Jogador
 PLAYER_MAX_HP = 200
@@ -100,8 +108,9 @@ def game_over():
     while game_over_menu:
 
         screen.fill((0, 0, 0))
+        screen.blit(menor_game_over, (SCREEN_WIDTH// 2 - menor_game_over.get_width()//2, 50))
 
-        if start_btn.draw(screen):
+        if game_over_btn.draw(screen):
             game_over_menu = False
 
         for event in pygame.event.get():
