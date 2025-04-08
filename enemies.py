@@ -1,6 +1,6 @@
 import pygame
 import math
-
+from random import randint
 from guns import Gun
 from camera import camera
 
@@ -20,12 +20,6 @@ class Enemy():
         self.acc = acc
         self.speed_x = 0
         self.speed_y = 0
-
-        # movement
-        self.anchor1 = ()
-        self.anchor2 = ()
-        self.anchor3 = ()
-        self.anchor4 = ()
 
         self.action = 'idle'
 
@@ -130,33 +124,40 @@ class Boss1():
         #status
         self.max_life = 600
         self.life = 600
-        self.acc = 1.5
+        self.acc = 0.6
         self.speed_x = 0
         self.speed_y = 0
 
         # movimentação
-        self.anchors = []
         self.action = 'anything'
+        self.direction = 0 # direção de movimento
+        self.change_cooldown = 1900 # tempo máximo andando para uma direção
+        self.last_change = pygame.time.get_ticks()
+        self.collided = False
 
         # ataques (2 ataques, um mirando no player e outro em circulo)
         self.sml_blt_image = pygame.image.load('Img/other/boss_blt.png')
         self.blt_image = pygame.transform.scale(self.sml_blt_image, (25, 25))
         self.blt_speed = 5
         self.blt_time = 300
+        self.damage = 30
         self.cirlce_atk_cooldown = 2000
         self.last_circle_atk = pygame.time.get_ticks()
         self.plr_atk_cooldown = 500
         self.last_plr_atk = pygame.time.get_ticks()
         self.blts = []
-
         self.angle = 0 # mira para o player
-        self.direction = 0 # direção de movimento
-
-    def update(self, screen, player):
+        
+    def update(self, screen, player, map):
         current_time = pygame.time.get_ticks()
 
         if self.life > 0:
             if not self.action == 'idle':
+                # Movimentação
+                self.look_player(player)
+                
+                self.movement(map)
+
                 # ataques
                 if current_time - self.last_circle_atk >= self.cirlce_atk_cooldown:
                     self.circle_atack()
@@ -170,12 +171,55 @@ class Boss1():
 
             screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
             self.show_life(screen)
-        
 
     def look_player(self, plr):
         dist_x = self.rect.centerx - plr.rect.centerx
         dist_y = self.rect.centery - plr.rect.centery
         self.angle = math.atan2(-dist_y, -dist_x) # em radianos
+
+    def change_direction(self, curr_time):
+        if curr_time - self.last_change >= self.change_cooldown or self.collided:
+            self.direction = math.radians(randint(-180, 180))
+            self.last_change = curr_time
+            self.collided = False
+
+        return math.cos(self.direction), math.sin(self.direction)
+        
+    def movement(self, map):
+        current_time = pygame.time.get_ticks()
+        cos, sin = self.change_direction(current_time)
+
+        # Atualiza a velocidade do boss
+        self.speed_x += self.acc * cos
+        self.speed_y += self.acc * sin 
+
+        # Movimenta o boss
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
+
+        # desacelera o boss
+        if self.speed_x > 0.01 or self.speed_x < -0.01:
+            self.speed_x *= 0.9
+        else:
+            self.speed_x = 0
+        if self.speed_y > 0.01 or self.speed_y < -0.01:
+            self.speed_y *= 0.9
+        else:
+            self.speed_y = 0
+
+        # prende o boss no mapa
+        if self.speed_x < 0 and self.rect.x <= 0:
+            self.rect.x = 0
+            self.collided = True
+        if self.speed_x > 0 and self.rect.right >= len(map.tiles[0]) * map.tile_size:
+            self.rect.right = len(map.tiles[0]) * map.tile_size
+            self.collided = True
+        if self.speed_y < 0 and self.rect.y <= 0:
+            self.rect.y = 0
+            self.collided = True
+        if self.speed_y > 0 and self.rect.bottom > len(map.tiles) * map.tile_size:
+            self.rect.bottom = len(map.tiles) * map.tile_size
+            self.collided = True
 
     def handle_blts(self, screen):
         for blt in self.blts:
@@ -226,14 +270,13 @@ class Boss1():
             'speed_y': self.blt_speed * sin,
             'time_to_live': self.blt_time,
         }
-        print(blt)
         self.blts.append(blt)
 
     def check_collision(self, plr):
         for blt in self.blts:
             if blt.get('rect').colliderect(plr.rect):
                 self.blts.remove(blt)
-                plr.life -= 30
+                plr.life -= self.damage
 
         if plr.weapon:
             plr.weapon.check_collision(self)

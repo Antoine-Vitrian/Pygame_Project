@@ -57,8 +57,7 @@ player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characte
 player.rect.clamp_ip(camera)
 
 # Armas
-init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
-pistol = Gun(500, 700, 20, 'Img/Armas/pistol.png', 7, 60, 10, False)
+init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
 
 gun_spawn_cooldown = 13000
 last_gun_spawn = pygame.time.get_ticks()
@@ -86,45 +85,6 @@ loaded_enemies = []
 
 # BOSS
 game_boss = Boss1('')
-
-# Telas
-
-def main_menu():
-    menu = True
-    while menu:
-        screen.blit(fundo_menu,(0, 0))
-        screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
-
-        if start_btn.draw(screen):
-            reset(player)
-            if level1():
-                boss_level1()
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        pygame.display.flip()
-        
-def game_over():
-    game_over_menu = True
-    while game_over_menu:
-
-        screen.fill((0, 0, 0))
-        screen.blit(menor_game_over, (SCREEN_WIDTH// 2 - menor_game_over.get_width()//2, 50))
-
-        if game_over_btn.draw(screen):
-            game_over_menu = False
-
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-
-        pygame.display.flip()
-
-
 # Funções para o jogo
 
 def reset(player):
@@ -141,7 +101,7 @@ def reset(player):
 
     laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
     bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, animation_cooldown, 'Img/other/bazooka_spritesheet.png', 32, 32)
-    gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 12, 80, 8, True)
+    gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 18, 80, 8, True)
     
     game_guns = [gun, laser_gun, bazooka]
 
@@ -291,8 +251,46 @@ def update_screen(player, camera):
             player.speed_y = 0
             player.rect.y = 0
 
-def boss_level1():
+# -----------------Telas--------------------------
+def main_menu():
+    menu = True
+    while menu:
+        screen.blit(fundo_menu,(0, 0))
+        screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
 
+        if start_btn.draw(screen):
+            reset(player)
+            if level1():
+                boss_level1()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                menu = False
+
+        pygame.display.flip()
+        
+def game_over():
+    game_over_menu = True
+    while game_over_menu:
+
+        screen.fill((0, 0, 0))
+        screen.blit(menor_game_over, (SCREEN_WIDTH// 2 - menor_game_over.get_width()//2, 50))
+
+        if game_over_btn.draw(screen):
+            game_over_menu = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        pygame.display.flip()
+
+def boss_level1():
+    game_boss.life = game_boss.max_life
+    game_boss.blts = []
+    game_boss.last_circle_atk = pygame.time.get_ticks()
+    game_boss.last_plr_atk = pygame.time.get_ticks()
 
     boss = True
     while boss:
@@ -304,7 +302,15 @@ def boss_level1():
         update_screen(player, camera)
         item_handler(loaded_items, [player.weapon])
 
-        game_boss.update(screen, player)
+        game_boss.update(screen, player, map)
+
+        if player.life <= 0:
+            game_over()
+            boss = False
+
+        elif game_boss.life <= 0:
+            pass # Tela de vitória
+            boss = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -345,7 +351,7 @@ def level1():
             game_over()
             run = False
 
-        if defeated_enemies >= 2:
+        if defeated_enemies >= 25:
             return True
 
         pygame.display.flip()
