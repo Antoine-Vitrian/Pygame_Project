@@ -219,6 +219,7 @@ def enemies_handler(enemies, screen, player):
     for enemy in enemies:
         if enemy.life > 0:
             enemy.update(screen, player)
+            enemy.check_collisions(enemies)
         else:
             enemies.remove(enemy)
             return 1

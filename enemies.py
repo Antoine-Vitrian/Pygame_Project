@@ -108,6 +108,29 @@ class Enemy():
         else:
             self.speed_y = 0
 
+    def get_hits(self, enemies):
+        hits = []
+        for enemy in enemies:
+            if self.rect.colliderect(enemy) and enemy != self:
+                hits.append(enemy)
+                print('true')
+        return hits
+
+    def check_collisions(self, enemies):
+        collisions = self.get_hits(enemies)
+        for enemy in collisions:
+            # horizontal
+            if enemy.speed_x > 0:
+                enemy.speed_x -= 5
+            elif enemy.speed_x < 0:
+                enemy.speed_x += 5
+            # Vertical
+            if enemy.speed_y > 0:
+                enemy.speed_y -= 5
+            elif enemy.speed_x < 0:
+                enemy.speed_y += 5
+
+
     def show_life(self, screen):
         pygame.draw.rect(screen, (255, 0, 0), (self.rect.x - camera.x, self.rect.y - camera.y - 16, self.rect.width, 10))
         pygame.draw.rect(screen, (255, 255, 0), (self.rect.x - camera.x, self.rect.y - 16 - camera.y, self.rect.width * (self.life/self.max_life), 10))
