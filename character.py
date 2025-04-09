@@ -114,6 +114,14 @@ class Player():
         pygame.draw.rect(screen, (0, 255, 0), (50, 20, self.life * 2, 15))
 
     def show_ammo_packs(self, screen):
+        # Texto
+        #fonte da munição
+        font = pygame.font.Font('freesansbold.ttf', 24) 
+
+        text = font.render('Munição:', True, (100, 180, 180))
+        screen.blit(text, (20, SCREEN_HEIGHT - 100))
+
+        # Imagens
         ammo_pack = pygame.image.load('Img/other/gun_battery.png')
         bazooka_ammo_pack = pygame.image.load('Img/other/bazooka_ammo.png')
         dist = 26

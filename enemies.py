@@ -120,15 +120,19 @@ class Enemy():
         collisions = self.get_hits(enemies)
         for enemy in collisions:
             # horizontal
-            if enemy.speed_x > 0:
-                enemy.speed_x -= 5
-            elif enemy.speed_x < 0:
-                enemy.speed_x += 5
+            if enemy.speed_x > 0 and self.rect.centerx > enemy.rect.centerx:
+                enemy.speed_x = -3
+                enemy.action = 'idle'
+            elif enemy.speed_x < 0 and self.rect.centerx < enemy.rect.centerx:
+                enemy.speed_x = 3
+                enemy.action = 'idle'
             # Vertical
-            if enemy.speed_y > 0:
-                enemy.speed_y -= 5
-            elif enemy.speed_x < 0:
-                enemy.speed_y += 5
+            if enemy.speed_y > 0 and self.rect.centery > enemy.rect.centery:
+                enemy.speed_y = -3
+                enemy.action = 'idle'
+            elif enemy.speed_x < 0 and self.rect.centery < enemy.rect.centery:
+                enemy.speed_y = 3
+                enemy.action = 'idle'
 
 
     def show_life(self, screen):

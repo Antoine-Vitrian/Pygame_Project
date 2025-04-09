@@ -10,6 +10,7 @@ from game_map import *
 from itens import AmmoPack
 from sprites import *
 from button import Button
+from dialog import DialogBox
 
 pygame.init()
 
@@ -18,7 +19,6 @@ clock = pygame.time.Clock()
 FPS = 60
 
 animation_cooldown = 60
-last_update = pygame.time.get_ticks()
 
 # Mapa
 tile_kinds = [
@@ -45,6 +45,9 @@ start_btn.rect.y -= start_btn.rect.height//2
 # Botões game over
 game_over_btn_img = pygame.image.load('Img/game_over/botao12.png')
 game_over_btn = Button(400, 500, game_over_btn_img, 3)
+
+# caixa de dialogo 
+dialog_box = DialogBox('Img/other/dialog_box.png', (255, 255, 255))
 
 # Jogador
 PLAYER_MAX_HP = 200
@@ -252,6 +255,46 @@ def update_screen(player, camera):
             player.speed_y = 0
             player.rect.y = 0
 
+def first_dialog():
+    position_x = (SCREEN_WIDTH - dialog_box.image.get_width()) // 2
+    position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
+
+    dialogo = [
+        'ERIK: Viktor, estamos no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava! Só que... espera, acho que a máquina não estava 100% pronta, viu? As armas estão caindo do céu!',
+        'VIKTOR: Erik, isso não está certo. A instabilidade da máquina...',
+        'VIKTOR: As armas não deveriam estar caindo assim. Isso pode estar afetando o tempo! Você precisa se apressar! Não podemos deixar que isso piore!',
+        'ERIK: Certo, tem munição caindo para todo lado! uma explosão próxima Eu... não esperava que fosse ficar tão caótico assim. O que mais pode dar errado?',
+        'VIKTOR: A distorção temporal está se espalhando. Se você não agir rápido, a linha do tempo pode ser comprometida. Se apresse, Erik!',
+        'ERIK: Ok... vou me apressar. Vamos ver o que eu consigo fazer para corrigir isso.'
+        ]
+    counter = 0
+
+    while True:
+        clock.tick(FPS)
+        keys_pressed = pygame.key.get_pressed()
+        
+        dialog_box.draw(screen, (position_x, position_y), dialogo[counter])
+
+        print(dialog_box.done)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if keys_pressed[pygame.K_SPACE]:
+            if not dialog_box.done:
+                dialog_box.speed = 2
+            else:
+                counter += 1
+        else:
+            dialog_box.speed = 3
+                    
+
+        pygame.display.flip()
+
+    
+
 # -----------------Telas--------------------------
 def main_menu():
     menu = True
@@ -330,10 +373,12 @@ def level1():
 
         map.draw(screen) # desenha o mapa (background)
 
+        update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
+
+        first_dialog()
+
         item_handler(loaded_items, loaded_guns)
         defeated_enemies += enemies_handler(loaded_enemies, screen, player)
-
-        update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         # collisions
         check_blt_collisions(player, loaded_enemies)
