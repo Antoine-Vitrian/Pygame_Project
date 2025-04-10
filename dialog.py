@@ -14,9 +14,10 @@ class DialogBox():
         self.color = color
         self.done = False
 
-    def draw(self, screen, pos, text):
+    def draw(self, screen, pos, text, img):
         screen.blit(self.image, pos)
         self.write(text)
+        self.char_box.blit(img, ((self.char_box.get_width() - img.get_width())//2, self.char_box.get_height() - img.get_height()))
 
     def write(self, text):
         if not self.done:

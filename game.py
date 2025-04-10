@@ -271,8 +271,14 @@ def first_dialog():
     while dialog:
         clock.tick(FPS)
         keys_pressed = pygame.key.get_pressed()
+
+        imgs = ['Img/Armas/laser_gun.png', 'Img/tiles/arame_farpado.png']
+        if 'erik:' in dialogo[text_counter].lower():
+            img = pygame.image.load(imgs[0])
+        elif 'viktor:' in dialogo[text_counter].lower():
+            img = pygame.image.load(imgs[1]) 
         
-        dialog_box.draw(screen, (position_x, position_y), dialogo[text_counter])
+        dialog_box.draw(screen, (position_x, position_y), dialogo[text_counter], img)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -281,13 +287,14 @@ def first_dialog():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     dialog = False
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_SPACE and dialog_box.done:
+                    text_counter += 1
+                    dialog_box.reset() 
 
         if keys_pressed[pygame.K_SPACE]:
             if not dialog_box.done:     
-                dialog_box.write_cooldown = 1
-            elif dialog_box.done and text_counter + 1 < len(dialogo):
-                text_counter += 1
-                dialog_box.reset()
+                dialog_box.write_cooldown = 1 
             elif text_counter == len(dialogo) - 1:
                 dialog = False
         else:
