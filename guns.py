@@ -219,7 +219,7 @@ class Laser_gun():
         self.overheat_timer = 0
 
         # laser
-        self.damage = 0.1
+        self.damage = 0.07
         self.damage_cooldown = 100
         self.last_hit = pygame.time.get_ticks()
         self.shooting = False
@@ -371,7 +371,7 @@ class Bazooka():
         self.ammo = ammo
         self.curr_ammo = ammo
         self.blts = []
-        self.blt_speed = 5
+        self.blt_speed = 10
         self.recharge_time = recharge_time
         self.curr_recharge_time = recharge_time
         self.recharge = False

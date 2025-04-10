@@ -2,14 +2,15 @@ import pygame
 
 class DialogBox():
     def __init__(self, image_path, color):
+        self.image_path = image_path
         self.image = pygame.image.load(image_path)
         self.char_box = pygame.image.load('Img/other/char_box.png')
         self.image.blit(self.char_box, (20, (self.image.get_height() - self.char_box.get_height())//2))
         self.font = pygame.font.Font('fonts/Pixel_Digivolve.otf', 18)
         self.counter = 0
         self.line_counter = 0
-        self.lines = []
-        self.speed = 3
+        self.write_cooldown = 40
+        self.last_write = pygame.time.get_ticks()
         self.color = color
         self.done = False
 
@@ -18,26 +19,27 @@ class DialogBox():
         self.write(text)
 
     def write(self, text):
-        text_width = self.image.get_width() - self.char_box.get_width() - 40
-        self.lines = self.wrap_text(text, text_width)
+        if not self.done:
+            current_time = pygame.time.get_ticks()
 
-        # Atualiza a linha a ser exibida
-        if self.line_counter < len(self.lines):
-            line = self.lines[self.line_counter]
-            max_chars = self.counter // self.speed
-            snip = self.font.render(line[0:max_chars], True, self.color)
-            self.image.blit(snip, (200, 20 + 20 * self.line_counter))
+            text_width = self.image.get_width() - self.char_box.get_width() - 40
+            lines = self.wrap_text(text, text_width)
 
-            # Quando toda a linha for escrita, passe para a próxima linha
-            if max_chars >= len(line):
-                self.line_counter += 1
-                self.counter = 0  # Reseta o contador de caracteres para a próxima linha
-
-        if self.line_counter < len(self.lines):
-            if self.counter < self.speed * len(self.lines[self.line_counter]):
+            # Atualiza a linha a ser exibida
+            if current_time - self.last_write >= self.write_cooldown:
+                self.last_write = current_time
+                
+                line = lines[self.line_counter]
+                snip = self.font.render(line[0:self.counter], True, self.color)
+                self.image.blit(snip, (self.char_box.get_width() + 30, 20 + 20 * self.line_counter))
                 self.counter += 1
-            else:
-                self.done = True
+                if self.counter > len(line):
+                    self.counter = 0
+                    if self.line_counter < len(lines) - 1:
+                        self.line_counter += 1
+                    else:
+                        print('true')
+                        self.done = True
 
     def wrap_text(self, text, max_width):
         words = text.split(' ')
@@ -60,4 +62,10 @@ class DialogBox():
         return lines
     
     def reset(self):
-        self.image.blit(self.image, (0, 0))
+        self.image = pygame.image.load(self.image_path)  # Recarrega a imagem original
+        self.char_box = pygame.image.load('Img/other/char_box.png')
+        self.image.blit(self.char_box, (20, (self.image.get_height() - self.char_box.get_height()) // 2))
+        self.counter = 0
+        self.line_counter = 0
+        self.last_write = pygame.time.get_ticks()
+        self.done = False
