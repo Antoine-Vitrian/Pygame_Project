@@ -3,14 +3,24 @@ import math
 from random import randint
 from guns import Gun
 from camera import camera
+from sprites import SpriteSheet
 
 class Enemy():
-    def __init__(self, x, y, image, life, ammo, acc):
-        self.surface = pygame.surface.Surface((50, 50)) # temporário até ter um sprite 
-        self.surface.fill((80, 190, 255))
-        # self.image = pygame.image.load(image)
-        self.rect = self.surface.get_rect()
-        self.rect.x, self.rect.y = x, y
+    def __init__(self, x, y, image, animation_cooldown, sprite_size, life, ammo, acc, scale):
+        # self.surface = pygame.surface.Surface((50, 50)) # temporário até ter um sprite 
+        # self.surface.fill((80, 190, 255))
+        self.sprite_image = pygame.image.load(image)
+        self.sprite_sheet = SpriteSheet(self.sprite_image)
+        self.sprite_width, self.sprite_height = sprite_size
+        animation_list = self.sprite_sheet.get_animations([4, 4], self.sprite_width, self.sprite_height, scale)
+        self.idle_animation = animation_list[0]
+        self.running_animation = animation_list[1]
+        self.animation_cooldown = animation_cooldown
+        self.last_update = pygame.time.get_ticks()
+        self.frame = 0
+
+        #retângulo
+        self.rect = pygame.rect.Rect(x, y, self.sprite_width * scale, self.sprite_height * scale)
 
         # Enemy status
         self.max_life = life
@@ -22,6 +32,7 @@ class Enemy():
         self.speed_y = 0
 
         self.action = 'idle'
+        self.last_action = ''
 
         # arma do inimigo
         self.gun = Gun(self.rect.x, self.rect.y, 30, 'Img/Armas/Arma_Soldado_inimigo.png', 8, 80, 20, False)
@@ -43,9 +54,43 @@ class Enemy():
             self.gun.shoot(enemy=True)
             self.last_shot = curr_time
 
-        screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
+        self.animate(screen)
 
         self.gun.update_enemy(self, screen, player)
+
+    def animate(self, screen):
+        current_time = pygame.time.get_ticks()
+
+        if current_time - self.last_update >= self.animation_cooldown:
+            if self.action == 'idle':
+                max_frame = len(self.idle_animation) - 1
+            elif self.action == 'pursuing':
+                max_frame = len(self.running_animation) - 1 
+
+            # se mudar de estado reinicia o frame
+            if self.last_action != self.action or self.frame + 1 == max_frame:
+                self.frame = 0
+                self.last_action = self.action
+            else:
+                self.frame += 1
+
+            self.last_update = current_time
+
+        
+
+        # Muda entre animações
+        if self.action == 'idle':
+            if self.gun.hand == 'right':
+                blit_image = self.idle_animation[self.frame]
+            else:
+                blit_image = pygame.transform.flip(self.idle_animation[self.frame], True, False).convert_alpha()
+        elif self.action == 'pursuing':
+            if self.gun.hand == 'right':
+                blit_image = self.running_animation[self.frame]
+            else:
+                blit_image = pygame.transform.flip(self.running_animation[self.frame], True, False).convert_alpha()
+
+        screen.blit(blit_image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
     def angle_difference(self, a, b):
         """Smallest difference between two angles (in radians)."""

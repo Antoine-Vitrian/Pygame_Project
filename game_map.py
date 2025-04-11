@@ -38,5 +38,6 @@ class Map:
                 location = (x * self.tile_size - camera.x, y * self.tile_size - camera.y)
                 image = self.tile_kinds[tile].image
                 screen.blit(image, location)
+
         
         

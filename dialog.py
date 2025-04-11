@@ -15,9 +15,21 @@ class DialogBox():
         self.done = False
 
     def draw(self, screen, pos, text, img):
+        keys_pressed = pygame.key.get_pressed()
+
         screen.blit(self.image, pos)
         self.write(text)
         self.char_box.blit(img, ((self.char_box.get_width() - img.get_width())//2, self.char_box.get_height() - img.get_height()))
+        skip_text = self.font.render('Pressione esc para pular', True, (100, 150, 255))
+        screen.blit(skip_text, (pos[0] + self.image.get_width() - skip_text.get_width(), pos[1] + self.image.get_height()))
+
+        if keys_pressed[pygame.K_SPACE]:
+            if not self.done:     
+                self.write_cooldown = 1 
+            else:
+                return 1
+        else:
+            self.write_cooldown = 40
 
     def write(self, text):
         if not self.done:
@@ -29,17 +41,15 @@ class DialogBox():
             # Atualiza a linha a ser exibida
             if current_time - self.last_write >= self.write_cooldown:
                 self.last_write = current_time
-                
+                self.counter += 1
                 line = lines[self.line_counter]
                 snip = self.font.render(line[0:self.counter], True, self.color)
                 self.image.blit(snip, (self.char_box.get_width() + 30, 20 + 20 * self.line_counter))
-                self.counter += 1
                 if self.counter > len(line):
                     self.counter = 0
                     if self.line_counter < len(lines) - 1:
                         self.line_counter += 1
                     else:
-                        print('true')
                         self.done = True
 
     def wrap_text(self, text, max_width):

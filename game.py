@@ -59,7 +59,7 @@ player.rect.clamp_ip(camera)
 # Armas
 init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
 
-gun_spawn_cooldown = 13000
+gun_spawn_cooldown = 0
 last_gun_spawn = pygame.time.get_ticks()
 gun_spawn_chance = 0
 
@@ -208,8 +208,12 @@ def enemies_handler(enemies, screen, player):
         enemy_spawn_chance += randint(0, 5)
         last_spawned_enemy = current_time
         if enemy_spawn_chance >= 5 and len(enemies) < enemy_limit:
-            soldier = Enemy(enemy_spawn_x, enemy_spawn_y, '', 60, 60, 0.2)
-            enemies.append(soldier)
+            soldier = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_1.png', animation_cooldown, (17, 23), 80, 60, 0.2, 3)
+            soldier2 = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_2.png', animation_cooldown, (17, 23), 60, 60, 0.3, 3)
+            if randint(0, 1):
+                enemies.append(soldier)
+            else:
+                enemies.append(soldier2)
             enemy_spawn_chance = 0
             print('enemy spawned')
 
@@ -230,9 +234,9 @@ def check_blt_collisions(player, enemies):
         # checa tiros dos inimigos
         enemy.gun.check_collision(player)
 
-def update_screen(player, camera):
-    camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
-    camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(map.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
+def update_screen(player, camera, mapa):
+    camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(mapa.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
+    camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(mapa.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
 
     player.update(screen)
 
@@ -256,6 +260,7 @@ def first_dialog():
 
     position_x = (SCREEN_WIDTH - dialog_box.image.get_width()) // 2
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
+    
 
     dialogo = [
         'ERIK: Eu voltei com sucesso Viktor! Estou no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava! Só que... espera, acho que a máquina não estava 100% pronta, viu? As armas estão caindo do céu!',
@@ -270,7 +275,6 @@ def first_dialog():
     dialog = True
     while dialog:
         clock.tick(FPS)
-        keys_pressed = pygame.key.get_pressed()
 
         imgs = ['Img/Armas/laser_gun.png', 'Img/tiles/arame_farpado.png']
         if 'erik:' in dialogo[text_counter].lower():
@@ -278,7 +282,12 @@ def first_dialog():
         elif 'viktor:' in dialogo[text_counter].lower():
             img = pygame.image.load(imgs[1]) 
         
-        dialog_box.draw(screen, (position_x, position_y), dialogo[text_counter], img)
+        if dialog_box.draw(screen, (position_x, position_y), dialogo[text_counter], img):
+            if text_counter < len(dialogo) - 1 and dialog_box.done:
+                text_counter += 1
+                dialog_box.reset()
+            elif text_counter >= len(dialogo) - 1:
+                dialog = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -287,18 +296,7 @@ def first_dialog():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     dialog = False
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_SPACE and dialog_box.done:
-                    text_counter += 1
-                    dialog_box.reset() 
-
-        if keys_pressed[pygame.K_SPACE]:
-            if not dialog_box.done:     
-                dialog_box.write_cooldown = 1 
-            elif text_counter == len(dialogo) - 1:
-                dialog = False
-        else:
-            dialog_box.write_cooldown = 40
+            
                     
         pygame.display.flip()
 
@@ -352,7 +350,7 @@ def boss_level1():
 
         screen.fill((0, 50, 255))
 
-        update_screen(player, camera)
+        update_screen(player, camera, map)
         item_handler(loaded_items, [player.weapon])
 
         game_boss.update(screen, player, map)
@@ -383,7 +381,7 @@ def level1():
 
         map.draw(screen) # desenha o mapa (background)
 
-        update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
+        update_screen(player, camera, map) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         if not game_started:
             first_dialog()
