@@ -219,8 +219,8 @@ class Laser_gun():
         self.overheat_timer = 0
 
         # laser
-        self.damage = 0.07
-        self.damage_cooldown = 100
+        self.damage = 5
+        self.damage_cooldown = 50
         self.last_hit = pygame.time.get_ticks()
         self.shooting = False
 
@@ -332,11 +332,18 @@ class Laser_gun():
 
             target_position = pygame.rect.Rect(target.rect.x - camera.x, target.rect.y - camera.y, target.rect.width, target.rect.height)
 
+            hit = False
+
             for i in range(0, 201):
                 px = laser_ix + (laser_fx - laser_ix) * i / 200
                 py = laser_iy + (laser_fy - laser_iy) * i / 200
-                if target_position.collidepoint(px, py) and current_time - self.last_hit >= self.damage_cooldown:
-                    target.life -= self.damage
+                if target_position.collidepoint(px, py):
+                    hit = True
+                    break
+
+            if hit and current_time - self.last_hit >= self.damage_cooldown:
+                target.life -= self.damage
+                self.last_hit = current_time
 
     def draw_ammo(self, screen):
         # Desenha a munição da arma

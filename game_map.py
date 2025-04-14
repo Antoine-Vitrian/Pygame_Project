@@ -43,3 +43,4 @@ class Map:
                         surface.blit(tile, (x * self.tmx_data.tilewidth * TILE_SCALE - camera.x, y * self.tmx_data.tileheight * TILE_SCALE - camera.y))
             
         
+        
