@@ -238,14 +238,14 @@ class Boss1():
         if self.speed_x < 0 and self.rect.x <= 0:
             self.rect.x = 0
             self.collided = True
-        if self.speed_x > 0 and self.rect.right >= len(map.tiles[0]) * map.tile_size:
-            self.rect.right = len(map.tiles[0]) * map.tile_size
+        if self.speed_x > 0 and self.rect.right >= map.width:
+            self.rect.right = map.width
             self.collided = True
         if self.speed_y < 0 and self.rect.y <= 0:
             self.rect.y = 0
             self.collided = True
-        if self.speed_y > 0 and self.rect.bottom > len(map.tiles) * map.tile_size:
-            self.rect.bottom = len(map.tiles) * map.tile_size
+        if self.speed_y > 0 and self.rect.bottom > map.height:
+            self.rect.bottom = map.height
             self.collided = True
 
     def handle_blts(self, screen):

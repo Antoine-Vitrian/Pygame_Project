@@ -11,6 +11,7 @@ from itens import AmmoPack
 from sprites import *
 from button import Button
 from dialog import DialogBox
+from map_tiled import *
 
 pygame.init()
 
@@ -21,13 +22,13 @@ FPS = 60
 animation_cooldown = 60
 
 # Mapa
-tile_kinds = [
-    Tile_kind("sand", "Img/tiles/areia.png", False),
-    Tile_kind("sand", "Img/tiles/areia_2.png", False),
-    Tile_kind("sand", "Img/tiles/areia_3.png", False),
-]
-map = Map("map/mapa_1.csv", tile_kinds, TILES_SIZE)
 
+map = Map("./map\mapa-boss\mapboss.tmx")
+
+# Tiled map
+
+# Carrega o mapa .tmx
+tmx_data = pytmx.util_pygame.load_pygame('./map\mapa-boss\mapboss.tmx')
 # Menu
 menu_logo = pygame.image.load('Img/logo/logo_semfundo.png')
 fundo_menu = pygame.image.load('Img/logo/fundo_menu.jpg')
@@ -141,8 +142,8 @@ def item_handler(items, guns, spawn_guns=True):
     global last_item_spawn
     global item_spawn_chance
 
-    item_x = randrange(75, len(map.tiles[0]) * map.tile_size) - 50
-    item_y = randrange(75, len(map.tiles) * map.tile_size) - 50
+    item_x = randrange(75, map.width) - 50
+    item_y = randrange(75, map.height) - 50
 
     if current_time - last_item_spawn >= item_spawn_cooldown:
         item_spawn_chance += randint(0, 5)
@@ -170,8 +171,8 @@ def item_handler(items, guns, spawn_guns=True):
         global gun_spawn_chance
         global game_guns
 
-        gun_x = randrange(75, len(map.tiles[0]) * map.tile_size) - 50
-        gun_y = randrange(75, len(map.tiles) * map.tile_size) - 50
+        gun_x = randrange(75, map.width) - 50
+        gun_y = randrange(75, map.height) - 50
 
         if current_time - last_gun_spawn >= gun_spawn_cooldown and len(game_guns):
             gun_spawn_chance += randint(0, 5)
@@ -195,14 +196,14 @@ def enemies_handler(enemies, screen, player):
     global last_spawned_enemy
     global enemy_spawn_chance
 
-    enemy_spawn_x = randrange(len(map.tiles[0] * map.tile_size))
-    enemy_spawn_y = randrange(len(map.tiles * map.tile_size))
+    enemy_spawn_x = randrange(map.width)
+    enemy_spawn_y = randrange(map.height)
 
     # Gerenciar spawn de inimigos
     while enemy_spawn_x >= camera.x and enemy_spawn_x <= camera.x + camera.width:
-        enemy_spawn_x = randrange(len(map.tiles[0] * map.tile_size))
+        enemy_spawn_x = randrange(map.width)
     while enemy_spawn_y >= camera.y and enemy_spawn_y <= camera.y + camera.height:
-        enemy_spawn_y = randrange(len(map.tiles * map.tile_size))
+        enemy_spawn_y = randrange(map.height)
 
     if current_time - last_spawned_enemy >= spawn_cooldown: # aleatóriamente adiciona chance de spawnar um inimigo
         enemy_spawn_chance += randint(0, 5)
@@ -231,21 +232,21 @@ def check_blt_collisions(player, enemies):
         enemy.gun.check_collision(player)
 
 def update_screen(player, camera):
-    camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (len(map.tiles[0]) * TILES_SIZE) - SCREEN_WIDTH))
-    camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (len(map.tiles) * TILES_SIZE) - SCREEN_HEIGHT))
+    camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
+    camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
 
     player.update(screen)
 
     # prende o jogador na tela
-    if player.speed_x > 0 and player.rect.x + player.rect.width >= len(map.tiles[0]) * map.tile_size:
+    if player.speed_x > 0 and player.rect.x + player.rect.width >= map.width:
             player.speed_x = 0
-            player.rect.x = len(map.tiles[0]) * map.tile_size - player.rect.width
+            player.rect.x = map.width - player.rect.width
     if player.speed_x < 0 and player.rect.x <= 0:
             player.speed_x = 0
             player.rect.x = 0
-    if player.speed_y > 0 and player.rect.y + player.rect.height >= len(map.tiles) * map.tile_size:
+    if player.speed_y > 0 and player.rect.y + player.rect.height >= map.height:
             player.speed_y = 0
-            player.rect.y = len(map.tiles) * map.tile_size - player.rect.height
+            player.rect.y = map.height - player.rect.height
     if player.speed_y < 0 and player.rect.y <= 0:
             player.speed_y = 0
             player.rect.y = 0
@@ -350,7 +351,7 @@ def boss_level1():
         clock.tick(FPS)
         
 
-        screen.fill((0, 50, 255))
+        map.draw_map(screen)
 
         update_screen(player, camera)
         item_handler(loaded_items, [player.weapon])
@@ -381,7 +382,7 @@ def level1():
     while run:
         clock.tick(FPS)
 
-        map.draw(screen) # desenha o mapa (background)
+        map.draw_map(screen) # desenha o mapa (background)
 
         update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
@@ -409,7 +410,7 @@ def level1():
             game_over()
             run = False
 
-        if defeated_enemies >= 25:
+        if defeated_enemies >= 1:
             return True
 
         pygame.display.flip()
