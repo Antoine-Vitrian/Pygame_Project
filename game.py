@@ -351,7 +351,7 @@ def boss_level1():
 
         map.draw_map(screen)
 
-        update_screen(player, camera, map)
+        update_screen(player, camera)
         item_handler(loaded_items, [player.weapon])
 
         game_boss.update(screen, player, map)
@@ -382,7 +382,7 @@ def level1():
 
         map.draw_map(screen) # desenha o mapa (background)
 
-        update_screen(player, camera, map) # desenha o jogo e os objetos (precisa estar depois do mapa)
+        update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
 
         if not game_started:
             first_dialog()
