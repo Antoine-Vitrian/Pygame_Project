@@ -43,7 +43,7 @@ class Enemy():
         # other
         self.angle = 0
 
-    def update(self, screen, player):
+    def update(self, screen, player, blts):
         curr_time = pygame.time.get_ticks()
 
         self.look_player(player)
@@ -51,7 +51,7 @@ class Enemy():
         self.show_life(screen)
 
         if curr_time - self.last_shot > self.shoot_cooldown and self.action == 'pursuing':
-            self.gun.shoot(enemy=True)
+            blts.append(self.gun.shoot(enemy=True))
             self.last_shot = curr_time
 
         self.animate(screen)
@@ -158,7 +158,6 @@ class Enemy():
         for enemy in enemies:
             if self.rect.colliderect(enemy) and enemy != self:
                 hits.append(enemy)
-                print('true')
         return hits
 
     def check_collisions(self, enemies):

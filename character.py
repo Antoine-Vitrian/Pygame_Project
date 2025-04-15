@@ -60,6 +60,8 @@ class Player():
             if self.state == 'walking':
                 self.frame = 0
                 self.state = 'idle'
+                self.speed_x = 0
+                self.speed_y = 0
 
         if not self.equiped:
             if self.speed_x > 0:

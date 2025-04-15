@@ -16,7 +16,6 @@ class Gun():
         #munições
         self.ammo = ammo # munição total
         self.curr_ammo = ammo # munição atual
-        self.blts = [] # lista para as balas carregadas
         self.blt_speed = blt_speed # velocidade da bala
         self.blt_time = 150 # tempo de vida da bala
         self.recharge_time = recharge_time #tempo de recarga
@@ -35,7 +34,7 @@ class Gun():
         self.curr_shoot_cooldown = 0
         self.auto_shoot = auto_shoot
 
-    def update(self, plr, screen):
+    def update(self, plr, screen, blts):
         keys_pressed = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
 
@@ -51,14 +50,13 @@ class Gun():
 
             # Posição do mouse    
             pos_x, pos_y = pygame.mouse.get_pos()
-
             self.get_angle((pos_x, pos_y))
 
             self.draw_gun(screen, plr, (pos_x, pos_y))
 
             # Lógica para atirar
             if mouse_buttons[0] and (self.prev_mouse_buttons[0] == 0 or self.auto_shoot) and self.curr_ammo > 0 and not self.recharge and not self.curr_shoot_cooldown:
-                self.shoot()
+                blts.append(self.shoot())
                 self.curr_ammo -= 1
                 self.curr_shoot_cooldown = self.shoot_cooldown
 
@@ -73,8 +71,6 @@ class Gun():
 
         if self.recharge:
             self.recharging(screen)
-
-        self.handle_bullets(screen)
 
         self.prev_mouse_buttons = mouse_buttons
 
@@ -150,34 +146,17 @@ class Gun():
             cos = math.cos(radians)
             sin = math.sin(radians)
             
-            bullet_info = {
-                "surface": rotated_bullet_surface,
-                "rect": bullet,
-                "speed_x": self.blt_speed * cos,
-                "speed_y": self.blt_speed * sin,
-                "time_to_live": self.blt_time
-            }
-            self.blts.append(bullet_info)
+            return Blt(
+                rotated_bullet_surface,
+                bullet,
+                self.blt_speed * cos,
+                self.blt_speed * sin,
+                self.blt_time,
+                self.damage,
+                enemy
+                )
 
-    def handle_bullets(self, screen):
-        for bullet in self.blts:
-            bullet.get("rect").x += bullet.get("speed_x")
-            bullet.get("rect").y += bullet.get("speed_y")
-
-            screen.blit(bullet.get("surface"), (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
-
-            # Diminui tempo de vida da bala e remove se acabar
-            if bullet.get("time_to_live"):
-                bullet["time_to_live"] -= 1
-            else:
-                self.blts.remove(bullet)
-
-    def check_collision(self, target):
-        for bullet in self.blts:
-            if bullet["rect"].colliderect(target):
-                target.life -= self.damage
-                
-                self.blts.remove(bullet)
+    
 
     def recharging(self, screen):
         if self.curr_recharge_time:
@@ -201,8 +180,6 @@ class Gun():
     def update_enemy(self, enemy, screen, plr):
         self.draw_gun(screen, enemy, (plr.rect.centerx - camera.x, plr.rect.centery - camera.y))
         self.get_angle((plr.rect.centerx, plr.rect.centery), enemy=True)
-
-        self.handle_bullets(screen)
 
 #------------------Arma Laser------------------------------------------
 class Laser_gun():
@@ -368,7 +345,7 @@ class Laser_gun():
 
 #--------------------------Basuca--------------------------------------------
 class Bazooka():
-    def __init__(self,x, y, ammo, image, recharge_time, animation_cooldown, sprite_sheet, sprite_width, sprite_height):
+    def __init__(self,x, y, ammo, image, recharge_time, animation_cooldown, sprite_sheet):
         # surface e rectangle
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
@@ -377,32 +354,28 @@ class Bazooka():
         #munições
         self.ammo = ammo
         self.curr_ammo = ammo
-        self.blts = []
         self.blt_speed = 10
         self.recharge_time = recharge_time
         self.curr_recharge_time = recharge_time
         self.recharge = False
 
         # Projetil
-        self.projectile_damage = 30
+        self.damage = 30
         self.shoot_cooldown = 30
         self.curr_shoot_cooldown = 0
 
         # Explosão
-        self.explosions = []
         self.explosion_damage = 3
         self.explosion_cooldown = 150
 
         # Animação
         self.sprite_image = pygame.image.load(sprite_sheet)
         self.sprite_sheet = SpriteSheet(self.sprite_image)
-        self.animation_list = self.sprite_sheet.get_animations([3, 7], sprite_width, sprite_height, 2)
-        self.sprite_width = sprite_width
-        self.sprite_height = sprite_height
+        self.sprite_width = self.sprite_image.get_width() / 10
+        self.sprite_height = self.sprite_image.get_height()
+        self.animation_list = self.sprite_sheet.get_animations([3, 7], self.sprite_width, self.sprite_height, 2)
         self.animation_cooldown = animation_cooldown
         self.last_update = pygame.time.get_ticks()
-        self.projectile_action = 0
-        self.explosion_action = 1
 
         # outros
         self.angle = 0
@@ -411,7 +384,7 @@ class Bazooka():
         self.hand = 'right'
 
 
-    def update(self, plr, screen):
+    def update(self, plr, screen, blts):
         keys_pressed = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
         current_time = pygame.time.get_ticks()
@@ -431,7 +404,7 @@ class Bazooka():
 
             # Lógica para atirar
             if mouse_buttons[0] and self.prev_mouse_buttons[0] == 0 and self.curr_ammo > 0 and not self.recharge and not self.curr_shoot_cooldown:
-                self.shoot(pos_x, pos_y)
+                blts.append(self.shoot(pos_x, pos_y))
                 self.curr_ammo -= 1
                 self.curr_shoot_cooldown = self.shoot_cooldown
 
@@ -450,7 +423,7 @@ class Bazooka():
         if self.recharge:
             self.recharging(screen)
 
-        self.handle_bullets(screen, current_time)
+        # self.handle_bullets(screen, current_time)
 
         self.prev_mouse_buttons = mouse_buttons
 
@@ -470,10 +443,9 @@ class Bazooka():
         if self.equiped == True:
 
             #criando a bala e transformando para ficar com o ângulo correto
-            frames = self.animation_list[self.projectile_action]
             bullet = pygame.rect.Rect(
                 self.rect.x - self.rect.width // 2, # posição x
-                self.rect.y - self.sprite_height, # posição y
+                self.rect.y - self.rect.height // 2, # posição y
                 self.sprite_width, # largura
                 self.sprite_height # altura
             )
@@ -484,24 +456,27 @@ class Bazooka():
             sin_mouse = math.sin(radians)
 
             # Distância do mouse para a arma
-            dx = self.rect.x - camera.x - mouse_x
-            dy = self.rect.y - camera.y - mouse_y
+            dx = self.rect.centerx - camera.x - mouse_x
+            dy = self.rect.centery - camera.y - mouse_y
             dist = (dx**2 + dy**2) ** 0.5
 
             # Calcula o tempo de vida da bala
-            time = dist // self.blt_speed
+            time = (dist // self.blt_speed) * 2
             
-            self.blts.append({
-                "frames_img": frames,
+            return {
+                "type": "explosive",
                 "frame": 0,
                 "last_update": pygame.time.get_ticks(),
+                "projectile_animation": self.animation_list[0],
+                "explosion_animation": self.animation_list[1],
                 "rect": bullet,
                 "speed_x": self.blt_speed * cos_mouse,
                 "speed_y": self.blt_speed * sin_mouse,
                 "time_to_live": time,
-                "explosion": 0,
+                "damage": self.damage,
+                "explosion": {},
                 "exploded": False
-            })
+            }
 
     def handle_bullets(self, screen, curr_time):
         for bullet in self.blts:
@@ -536,22 +511,21 @@ class Bazooka():
                     target.life -= self.explosion_damage
 
     def explosion(self, screen, bullet):
-        explosion_frames = self.animation_list[self.explosion_action]
+        explosion_frames = bullet.get("explosion_animation")
         
         if not bullet.get("exploded"): # caso seja a primeira vez que a função for chamada
             bullet["frame"] = 0
             bullet["exploded"] = True
             bullet["speed_x"], bullet["speed_y"] = 0, 0
 
-        elif bullet["frame"] <= len(self.animation_list[self.explosion_action]) - 1: # lógica durante a explosão do projétil (termina quando os frames acabam)
+        elif bullet["frame"] < len(explosion_frames): # lógica durante a explosão do projétil (termina quando os frames acabam)
             for i in range(len(explosion_frames)): # muda o tamanho da explosão
-                explosion_frames[i] = pygame.transform.scale(explosion_frames[i], (self.sprite_width * 3, self.sprite_height * 3))
+                explosion_frames[i] = pygame.transform.scale(explosion_frames[i], (50, 50))
                 explosion_frames[i].set_colorkey((0, 0, 0))
             exp_surf = explosion_frames[bullet["frame"]]
-            exp_width, exp_height = exp_surf.get_width(), exp_surf.get_height()
             exp_rect = exp_surf.get_rect()
-            exp_rect.x = bullet.get("rect").centerx - exp_width//2 
-            exp_rect.y = bullet.get("rect").centery - exp_height//2
+            exp_rect.centerx = bullet.get("rect").centerx 
+            exp_rect.centery = bullet.get("rect").centery
 
             explosion = {
                 "rect": exp_rect,
@@ -625,3 +599,30 @@ class Bazooka():
         if direction.length() > 0:
             self.angle = direction.angle_to(pygame.Vector2(1, 0))
 
+class Blt():
+    def __init__(self, surf, rect, speed_x, speed_y, time_to_live, damage, enemy):
+        self.type = "gun"
+        self.surf = surf
+        self.rect = rect
+        self.damage = damage
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+        self.time_to_live = time_to_live
+        self.enemy = enemy
+
+class Exp_Blt():
+    def __init__(self, proj_anim_list, exp_anim_list, rect, speed_x, speed_y, time_to_live, damage):
+        self.type = "explosive"
+        self.projectile_animation = proj_anim_list
+        self.exp_animation = exp_anim_list
+        self.rect = rect
+        self.damage = damage
+        self.speed_x = speed_x
+        self.speed_y = speed_y
+        self.time_to_live = time_to_live
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.explosion = {}
+        self.exploded = False
+        
+    # def update(self):
