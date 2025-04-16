@@ -156,8 +156,6 @@ class Gun():
                 enemy
                 )
 
-    
-
     def recharging(self, screen):
         if self.curr_recharge_time:
             self.curr_recharge_time -= 1
@@ -183,7 +181,7 @@ class Gun():
 
 #------------------Arma Laser------------------------------------------
 class Laser_gun():
-    def __init__(self,x, y, ammo, image, scale):
+    def __init__(self,x, y, ammo, image):
         # superfície e retângulo
         self.image = pygame.image.load(image)
         self.rect = self.image.get_rect()
@@ -207,7 +205,7 @@ class Laser_gun():
         self.hand = 'right'
 
 
-    def update(self, plr, screen):
+    def update(self, plr, screen, enemies):
         keys_pressed = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
 
@@ -240,6 +238,10 @@ class Laser_gun():
                     self.overheat_timer = 120
             else:
                 self.shooting = False
+
+            # checa colisão
+            for enemy in enemies:
+                self.check_collision(enemy)
         
         # Recarrega enquanto a munição é menor que a munição máxima e não está atirando
         if (self.curr_ammo < self.ammo and not mouse_buttons[0]) or self.overheat_timer and self.curr_ammo <= self.ammo:
@@ -461,87 +463,17 @@ class Bazooka():
             dist = (dx**2 + dy**2) ** 0.5
 
             # Calcula o tempo de vida da bala
-            time = (dist // self.blt_speed) * 2
+            time = dist // self.blt_speed
             
-            return {
-                "type": "explosive",
-                "frame": 0,
-                "last_update": pygame.time.get_ticks(),
-                "projectile_animation": self.animation_list[0],
-                "explosion_animation": self.animation_list[1],
-                "rect": bullet,
-                "speed_x": self.blt_speed * cos_mouse,
-                "speed_y": self.blt_speed * sin_mouse,
-                "time_to_live": time,
-                "damage": self.damage,
-                "explosion": {},
-                "exploded": False
-            }
-
-    def handle_bullets(self, screen, curr_time):
-        for bullet in self.blts:
-            bullet.get("rect").x += bullet.get("speed_x")
-            bullet.get("rect").y += bullet.get("speed_y")
-
-            # Animação do projétil
-            if curr_time - bullet.get("last_update") >= self.animation_cooldown:
-                bullet["frame"] += 1
-                bullet["last_update"] = curr_time
-                if bullet.get("time_to_live") and bullet.get("frame") >= len(self.animation_list[self.projectile_action]):
-                        bullet["frame"] = 0
-
-            # Desenha o projétil e diminui o tempo de vida
-            if bullet.get("time_to_live"):
-                bullet["time_to_live"] -= 1
-                screen.blit(bullet["frames_img"][bullet["frame"]], (bullet.get("rect").x - camera.x, bullet.get("rect").y - camera.y))
-            
-            else:
-                self.explosion(screen, bullet)
-
-    def check_collision(self, target):
-        curr_tick = pygame.time.get_ticks()
-
-        for bullet in self.blts:
-            if bullet["rect"].colliderect(target) and bullet["time_to_live"]:
-                target.life -= self.projectile_damage
-                bullet["time_to_live"] = 0
-
-            if bullet["explosion"] and curr_tick - bullet["explosion"]["last_tick"] >= bullet["explosion"]["explosion_cooldown"]:
-                if bullet["explosion"]["rect"].colliderect(target):
-                    target.life -= self.explosion_damage
-
-    def explosion(self, screen, bullet):
-        explosion_frames = bullet.get("explosion_animation")
-        
-        if not bullet.get("exploded"): # caso seja a primeira vez que a função for chamada
-            bullet["frame"] = 0
-            bullet["exploded"] = True
-            bullet["speed_x"], bullet["speed_y"] = 0, 0
-
-        elif bullet["frame"] < len(explosion_frames): # lógica durante a explosão do projétil (termina quando os frames acabam)
-            for i in range(len(explosion_frames)): # muda o tamanho da explosão
-                explosion_frames[i] = pygame.transform.scale(explosion_frames[i], (50, 50))
-                explosion_frames[i].set_colorkey((0, 0, 0))
-            exp_surf = explosion_frames[bullet["frame"]]
-            exp_rect = exp_surf.get_rect()
-            exp_rect.centerx = bullet.get("rect").centerx 
-            exp_rect.centery = bullet.get("rect").centery
-
-            explosion = {
-                "rect": exp_rect,
-                "last_tick": pygame.time.get_ticks(),
-                "explosion_cooldown": 80
-            }
-
-            if not bullet["explosion"]:
-                bullet["explosion"] = explosion
-
-            # lida com a animação da explosão
-            screen.blit(exp_surf, (exp_rect.x - camera.x, exp_rect.y - camera.y))
-
-        else:
-            self.blts.remove(bullet)
-
+            return Exp_Blt(
+                self.animation_list[0],
+                self.animation_list[1],
+                bullet,
+                self.blt_speed * cos_mouse,
+                self.blt_speed * sin_mouse,
+                time,
+                self.damage
+            )
 
     def recharging(self, screen):
         if self.curr_recharge_time:
@@ -624,5 +556,44 @@ class Exp_Blt():
         self.last_update = pygame.time.get_ticks()
         self.explosion = {}
         self.exploded = False
+        self.enemy = False
         
-    # def update(self):
+    def update(self, screen, curr_time, animation_cooldown):
+        if curr_time - self.last_update >= animation_cooldown:
+            self.frame += 1
+            self.last_update = curr_time
+            if self.frame >= len(self.projectile_animation) and not self.exploded:
+                self.frame = 0
+
+        if self.time_to_live:
+            screen.blit(self.projectile_animation[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
+
+    def get_explosion(self, screen, enemies):
+        if not self.exploded: # caso seja a primeira vez que a função for chamada
+            self.frame = 0
+            self.exploded = True
+            self.speed_x, self.speed_y = 0, 0
+
+        new_frames = []
+
+        for ind, frame in enumerate(self.exp_animation): # Aumenta o tamanho da explosão
+            new_frame = pygame.transform.scale(frame, (10 * (ind + 4), 10 * (ind + 4)))
+            new_frame.set_colorkey((0, 0, 0))
+            new_frames.append(new_frame)
+
+        if self.frame < len(self.exp_animation):
+            exp_surf = new_frames[self.frame]
+            exp_rect = exp_surf.get_rect()
+            exp_rect.centerx = self.rect.centerx
+            exp_rect.centery = self.rect.centery
+
+            self.check_collision(exp_rect, enemies)
+            screen.blit(exp_surf, (exp_rect.x - camera.x, exp_rect.y - camera.y))
+
+        else:
+            return True
+        
+    def check_collision(self, blt_rect, enemies):
+        for enemy in enemies:
+            if blt_rect.colliderect(enemy):
+                enemy.life -= 2.5

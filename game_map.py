@@ -1,12 +1,12 @@
 import pygame
 from camera import create_screen, camera
-import csv
 import pygame
 import pytmx
 from pytmx import load_pygame
 from pytmx import TiledImageLayer
 import pytmx.util_pygame
 from camera import create_screen, camera
+from enemies import Boss1
 
 
 # Inicializa Pygame
@@ -83,14 +83,16 @@ class Map:
                         entity.rect.right = block.left
                     elif entity.speed_x < 0 and block.centerx < entity.rect.centerx:
                         entity.speed_x = 0
-                        entity.rect.left = block.right
-                    if entity.speed_y > 0 and block.centery > entity.rect.centery:
+                        entity.rect.left = block.right      
+                    elif entity.speed_y > 0 and block.centery > entity.rect.centery:
                         entity.speed_y = 0
                         entity.rect.bottom = block.top
                     elif entity.speed_y < 0 and block.centery < entity.rect.centery:
                         entity.speed_y = 0
                         entity.rect.top = block.bottom
-        
+                    if isinstance(entity, Boss1):
+                        entity.collided = True
+
         for blt in blts:
             for tile in self.collision_tiles:
                 if blt.rect.colliderect(tile):

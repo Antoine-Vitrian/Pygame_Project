@@ -1,7 +1,7 @@
 import pygame
 import math
 from random import randint
-from guns import Gun
+from guns import Gun, Blt
 from camera import camera
 from sprites import SpriteSheet
 
@@ -30,6 +30,7 @@ class Enemy():
         self.acc = acc
         self.speed_x = 0
         self.speed_y = 0
+        self.invincible = False
 
         self.action = 'idle'
         self.last_action = ''
@@ -198,6 +199,7 @@ class Boss1():
         self.acc = 0.6
         self.speed_x = 0
         self.speed_y = 0
+        self.invincible = False
 
         # movimentação
         self.action = 'anything'
@@ -219,7 +221,7 @@ class Boss1():
         self.blts = []
         self.angle = 0 # mira para o player
         
-    def update(self, screen, player, map):
+    def update(self, screen, player, blt_list):
         current_time = pygame.time.get_ticks()
 
         if self.life > 0:
@@ -227,18 +229,16 @@ class Boss1():
                 # Movimentação
                 self.look_player(player)
                 
-                self.movement(map)
+                self.movement()
 
                 # ataques
                 if current_time - self.last_circle_atk >= self.cirlce_atk_cooldown:
-                    self.circle_atack()
+                    self.circle_atack(blt_list)
                     self.last_circle_atk = current_time
                 self.look_player(player) # conseguir o ângulo que o boss deve mirar
                 if current_time - self.last_plr_atk >= self.plr_atk_cooldown:
-                    self.plr_atack()
+                    self.plr_atack(blt_list)
                     self.last_plr_atk = current_time
-                self.handle_blts(screen)
-                self.check_collision(player)
 
             screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
             self.show_life(screen)
@@ -256,7 +256,7 @@ class Boss1():
 
         return math.cos(self.direction), math.sin(self.direction)
         
-    def movement(self, map):
+    def movement(self):
         current_time = pygame.time.get_ticks()
         cos, sin = self.change_direction(current_time)
 
@@ -278,33 +278,7 @@ class Boss1():
         else:
             self.speed_y = 0
 
-        # prende o boss no mapa
-        if self.speed_x < 0 and self.rect.x <= 0:
-            self.rect.x = 0
-            self.collided = True
-        if self.speed_x > 0 and self.rect.right >= map.width:
-            self.rect.right = map.width
-            self.collided = True
-        if self.speed_y < 0 and self.rect.y <= 0:
-            self.rect.y = 0
-            self.collided = True
-        if self.speed_y > 0 and self.rect.bottom > map.height:
-            self.rect.bottom = map.height
-            self.collided = True
-
-    def handle_blts(self, screen):
-        for blt in self.blts:
-            blt.get('rect').x += blt.get('speed_x')
-            blt.get('rect').y += blt.get('speed_y')
-
-            screen.blit(blt.get('image'), (blt.get('rect').x - camera.x, blt.get('rect').y - camera.y))
-
-            if blt.get('time_to_live'):
-                blt['time_to_live'] -= 1
-            else:
-                self.blts.remove(blt)
-
-    def circle_atack(self):
+    def circle_atack(self, blt_list):
         for i in range(16):
             # calcula o ângulo da bala junto do seno e cosseno
             angle = 22.5 * i
@@ -316,17 +290,17 @@ class Boss1():
             blt_rect = self.blt_image.get_rect()
             blt_rect.centerx, blt_rect.centery = self.rect.centerx, self.rect.centery
 
-            # informações da bala
-            blt_temp = {
-                'image': self.blt_image,
-                'rect': blt_rect,
-                'speed_x': self.blt_speed * cos,
-                'speed_y': self.blt_speed * sin,
-                'time_to_live': self.blt_time,
-            }
-            self.blts.append(blt_temp) # adiciona a bala na lista do boss
+            blt_list.append(Blt( # adiciona a bala na lista de balas
+                self.blt_image,
+                blt_rect,
+                self.blt_speed * cos,
+                self.blt_speed * sin,
+                self.blt_time,
+                self.damage,  
+                True  
+            )) 
 
-    def plr_atack(self):
+    def plr_atack(self, blt_list):
         # cosseno e seno do ângulo atual
         cos = math.cos(self.angle)
         sin = math.sin(self.angle)
@@ -334,23 +308,15 @@ class Boss1():
         blt_rect = self.blt_image.get_rect()
         blt_rect.centerx, blt_rect.centery = self.rect.centerx, self.rect.centery
 
-        blt = {
-            'image': self.blt_image,
-            'rect': blt_rect,
-            'speed_x': self.blt_speed * cos,
-            'speed_y': self.blt_speed * sin,
-            'time_to_live': self.blt_time,
-        }
-        self.blts.append(blt)
-
-    def check_collision(self, plr):
-        for blt in self.blts:
-            if blt.get('rect').colliderect(plr.rect):
-                self.blts.remove(blt)
-                plr.life -= self.damage
-
-        if plr.weapon:
-            plr.weapon.check_collision(self)
+        blt_list.append(Blt( # adiciona a bala na lista de balas
+                self.blt_image,
+                blt_rect,
+                self.blt_speed * cos,
+                self.blt_speed * sin,
+                self.blt_time,
+                self.damage,  
+                True  
+            ))
 
     def show_life(self, screen):
         pygame.draw.rect(screen, (70, 70, 70), (camera.width/8, camera.height*7/8, camera.width*6/8, 40))

@@ -17,13 +17,18 @@ class Player():
         self.walking_animation_list = self.animation_list[1]
         self.frame = 0
 
+        # status
         self.rect = pygame.rect.Rect(x, y, sprite_width * scale, sprite_height * scale)
         self.max_life = life
+        self.last_life = life
         self.life = life
         self.equiped = False
         self.bazooka_ammo_pack = 4
         self.ammo_pack = 5
         self.weapon = None
+        self.invincible = False
+        self.last_invincible = pygame.time.get_ticks()
+        self.invincible_cooldown = 600
         
         # Movimentação 
         self.speed_x = 0
@@ -33,22 +38,18 @@ class Player():
 
 
     def update(self, screen):
-        keys_pressed = pygame.key.get_pressed()
-
+        current_time = pygame.time.get_ticks()
         self.draw_life(screen)
 
-        # Movimentação
-        if keys_pressed[pygame.K_a]:
-            self.speed_x -= self.acc
-        if keys_pressed[pygame.K_d]:
-            self.speed_x += self.acc
-        if keys_pressed[pygame.K_w]:
-            self.speed_y -= self.acc
-        if keys_pressed[pygame.K_s]:
-            self.speed_y += self.acc
+        if self.last_life > self.life:
+            self.last_life = self.life
+            self.invincible = True
+            self.last_invincible = pygame.time.get_ticks()
 
-        if self.equiped == True or keys_pressed[pygame.K_c]:
-            self.show_ammo_packs(screen)
+        if self.invincible and current_time - self.last_invincible >= self.invincible_cooldown:
+            self.invincible = False
+
+        self.inputs(screen)
 
         if self.speed_x >= 0.1 or self.speed_x <= -0.1 or self.speed_y >= 0.1 or self.speed_y <= -0.1:
             self.speed_x *= self.friction
@@ -74,34 +75,46 @@ class Player():
 
         self.draw_player(screen)
 
+    def inputs(self, screen):
+        keys_pressed = pygame.key.get_pressed()
+
+        # Movimentação
+        if keys_pressed[pygame.K_a]:
+            self.speed_x -= self.acc
+        if keys_pressed[pygame.K_d]:
+            self.speed_x += self.acc
+        if keys_pressed[pygame.K_w]:
+            self.speed_y -= self.acc
+        if keys_pressed[pygame.K_s]:
+            self.speed_y += self.acc
+
+        if self.equiped == True or keys_pressed[pygame.K_c]:
+            self.show_ammo_packs(screen)
+
     def draw_player(self, screen):
         current_time = pygame.time.get_ticks()
 
+        if current_time - self.last_update >= self.animation_cooldown:
+            self.frame += 1
+            self.last_update = current_time
+
         if self.state == 'idle':
-            if current_time - self.last_update >= self.animation_cooldown:
-                self.frame += 1
-                self.last_update = current_time
-                if self.frame == len(self.idle_animation_list):
-                    self.frame = 0
+            if self.frame == len(self.idle_animation_list):
+                self.frame = 0
             if self.direction == 'right':
                 screen.blit(self.idle_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
             elif self.direction == 'left':
-                fliped_image = pygame.transform.flip(self.idle_animation_list[self.frame], True, False)
-                fliped_image.set_colorkey((0, 0, 0))
+                fliped_image = pygame.transform.flip(self.idle_animation_list[self.frame], True, False).convert_alpha()
                 screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
         elif self.state == 'walking':
-            if current_time - self.last_update >= self.animation_cooldown:
-                self.frame += 1
-                self.last_update = current_time
-                if self.frame == len(self.walking_animation_list) - 1:
-                    self.frame = 0
+            if self.frame == len(self.walking_animation_list) - 1:
+                self.frame = 0
             
             if self.direction == 'right':
                 screen.blit(self.walking_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
             elif self.direction == 'left':
-                fliped_image = pygame.transform.flip(self.walking_animation_list[self.frame], True, False)
-                fliped_image.set_colorkey((0, 0, 0))
+                fliped_image = pygame.transform.flip(self.walking_animation_list[self.frame], True, False).convert_alpha()
                 screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
     def equip(self):

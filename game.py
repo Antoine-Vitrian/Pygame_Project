@@ -51,7 +51,7 @@ PLAYER_INITIAL_X = 300
 PLAYER_INITIAL_Y = 300
 INITIAL_AMMO = (5, 4)
 
-player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characters/main_character.png', 2, ANIMATION_COOLDOWN, [8, 4], 34, 46,)
+player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characters/protagonista.png', 2.5, ANIMATION_COOLDOWN, [1, 3], 28, 31)
 
 player.rect.clamp_ip(camera)
 
@@ -89,22 +89,18 @@ game_boss = Boss1('')
 # Funções para o jogo
 
 def reset(player):
-    global loaded_enemies
     global last_spawned_enemy
     global enemy_spawn_chance
     global game_guns
     global loaded_guns
     global last_gun_spawn
     global gun_spawn_chance
-    global loaded_items
     global last_item_spawn
     global item_spawn_chance
 
-    laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png', 1)
+    laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png')
     bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, ANIMATION_COOLDOWN, 'Img/other/bazooka_spritesheet.png')
     gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 18, 80, 8, True)
-    
-    game_guns = [gun, laser_gun, bazooka]
 
     # reseta os spawns
     last_gun_spawn = pygame.time.get_ticks()
@@ -114,15 +110,21 @@ def reset(player):
     last_item_spawn = pygame.time.get_ticks()
     item_spawn_chance = 0
 
-    loaded_enemies = []
-    loaded_guns = [init_pistol]
-    loaded_items = []
+    # Limpa os inimigos
+    for enemy in loaded_enemies:
+        loaded_enemies.remove(enemy)
+    # Reseta as armas
+    for gun in loaded_guns:
+        loaded_guns.remove(gun)
+    loaded_guns.append(init_pistol)
+    #limpa os itens
+    for item in loaded_items:
+        loaded_items.remove(item)
 
     # Reseta as armas
     game_guns = [gun, laser_gun, bazooka]
     pistol = loaded_guns[0]
     pistol.rect.topleft = (PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50)
-    pistol.equiped = False
     pistol.curr_ammo = pistol.ammo
 
     for gun in game_guns:
@@ -188,7 +190,7 @@ def item_handler(items, guns, plr_blts, enemy_blts, spawn_guns=True):
         if not isinstance(gun, Laser_gun):
             gun.update(player, screen, player_blts)
         else:
-            gun.update(player, screen)
+            gun.update(player, screen, loaded_enemies)
 
         if gun.equiped:
             gun.draw_ammo(screen)
@@ -207,75 +209,72 @@ def handle_blts(plr_blts, enemy_blts):
             screen.blit(bullet.surf, (bullet.rect.x - camera.x, bullet.rect.y - camera.y))
         
         elif bullet.type == "explosive": # Lógica para animar a explosão
-
-            if curr_time - bullet.last_update >= ANIMATION_COOLDOWN:
-                bullet.frame += 1
-                bullet.last_update = curr_time
-                if bullet.frame >= len(bullet.projectile_animation):
-                    bullet.frame = 0
-
-            if bullet.time_to_live:
-                bullet.time_to_live -= 1
-                screen.blit(bullet.projectile_animation[bullet.frame], (bullet.rect.x - camera.x, bullet.rect.y - camera.y))
-            elif bullet.frame >= len(bullet.explosion_animation):
-                plr_blts.remove(bullet)
+            bullet.update(screen, curr_time, ANIMATION_COOLDOWN)
 
         # Diminui tempo de vida da bala e remove se acabar
         if bullet.time_to_live:
             bullet.time_to_live -= 1
         elif bullet.enemy:
             enemy_blts.remove(bullet)
-        else:
+        elif isinstance(bullet, Blt):
+            plr_blts.remove(bullet)
+        elif bullet.get_explosion(screen, loaded_enemies):
             plr_blts.remove(bullet)
 
         if bullet.enemy:
             check_blt_collision(bullet, player)
         else:
-            
             for enemy in loaded_enemies:
                 check_blt_collision(bullet, enemy)
 
 def check_blt_collision(blt, target): # checa se a bala acertou o alvo
     if blt.rect.colliderect(target) and blt.time_to_live:
-        target.life -= blt.damage
+        if not target.invincible:
+            target.life -= blt.damage
         blt.time_to_live = 0
 
-def enemies_handler(enemies, screen, player):
+def enemies_handler(enemies, screen, player, boss_level=False):
     current_time = pygame.time.get_ticks()
     global last_spawned_enemy
     global enemy_spawn_chance
 
-    enemy_spawn_x = randrange(map.width)
-    enemy_spawn_y = randrange(map.height)
-
-    # Gerenciar spawn de inimigos
-    while enemy_spawn_x >= camera.x and enemy_spawn_x <= camera.x + camera.width:
+    if not boss_level:
         enemy_spawn_x = randrange(map.width)
-    while enemy_spawn_y >= camera.y and enemy_spawn_y <= camera.y + camera.height:
         enemy_spawn_y = randrange(map.height)
 
-    if current_time - last_spawned_enemy >= spawn_cooldown: # aleatóriamente adiciona chance de spawnar um inimigo
-        enemy_spawn_chance += randint(0, 5)
-        last_spawned_enemy = current_time
-        if enemy_spawn_chance >= 5 and len(enemies) < enemy_limit:
-            soldier = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_1.png', ANIMATION_COOLDOWN, (17, 23), 80, 60, 0.2, 3)
-            soldier2 = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_2.png', ANIMATION_COOLDOWN, (17, 23), 60, 60, 0.3, 3)
-            if randint(0, 1):
-                enemies.append(soldier)
-            else:
-                enemies.append(soldier2)
-            enemy_spawn_chance = 0
-            print('enemy spawned')
+        # Gerenciar spawn de inimigos
+        while enemy_spawn_x >= camera.x and enemy_spawn_x <= camera.x + camera.width:
+            enemy_spawn_x = randrange(map.width)
+        while enemy_spawn_y >= camera.y and enemy_spawn_y <= camera.y + camera.height:
+            enemy_spawn_y = randrange(map.height)
 
-    # Lógica para desenhar inimigos na tela e eliminar inimigos mortos
-    for enemy in enemies:
-        if enemy.life > 0:
+        if current_time - last_spawned_enemy >= spawn_cooldown: # aleatóriamente adiciona chance de spawnar um inimigo
+            enemy_spawn_chance += randint(0, 5)
+            last_spawned_enemy = current_time
+            if enemy_spawn_chance >= 5 and len(enemies) < enemy_limit:
+                soldier = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_1.png', ANIMATION_COOLDOWN, (17, 23), 80, 60, 0.2, 3)
+                soldier2 = Enemy(enemy_spawn_x, enemy_spawn_y, 'Img/characters/soldado_2.png', ANIMATION_COOLDOWN, (17, 23), 60, 60, 0.3, 3)
+                if randint(0, 1):
+                    enemies.append(soldier)
+                else:
+                    enemies.append(soldier2)
+                enemy_spawn_chance = 0
+                print('enemy spawned')
+
+        # Lógica para desenhar inimigos na tela e eliminar inimigos mortos
+        for enemy in enemies:
+            if enemy.life > 0 and isinstance(enemy, Enemy):
+                enemy.update(screen, player, enemies_blts)
+                enemy.check_collisions(enemies)
+            else:
+                enemies.remove(enemy)
+                return 1
+        return 0
+    else:
+        for enemy in enemies:
+            if not isinstance(enemy, Boss1):
+                enemies.remove(enemy)
             enemy.update(screen, player, enemies_blts)
-            enemy.check_collisions(enemies)
-        else:
-            enemies.remove(enemy)
-            return 1
-    return 0
 
 def update_screen(player, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
@@ -343,8 +342,6 @@ def first_dialog():
                     
         pygame.display.flip()
 
-    
-
 # -----------------Telas--------------------------
 def main_menu():
     menu = True
@@ -386,17 +383,21 @@ def boss_level1():
     game_boss.last_circle_atk = pygame.time.get_ticks()
     game_boss.last_plr_atk = pygame.time.get_ticks()
 
+    for enemy in loaded_enemies:
+        loaded_enemies.remove(enemy)
+
+    loaded_enemies.append(game_boss)
+
     boss = True
     while boss:
         clock.tick(FPS)
-        
 
         map.draw_map(screen)
+        map.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts)
 
         update_screen(player, camera)
-        item_handler(loaded_items, [player.weapon])
-
-        game_boss.update(screen, player, map)
+        item_handler(loaded_items, [player.weapon], player_blts, enemies_blts)
+        enemies_handler(loaded_enemies, screen, player, boss_level=True)
 
         if player.life <= 0:
             game_over()
@@ -432,7 +433,8 @@ def level1():
 
         item_handler(loaded_items, loaded_guns, player_blts, enemies_blts)
 
-        defeated_enemies += enemies_handler(loaded_enemies, screen, player)
+        if enemies_handler(loaded_enemies, screen, player):
+            defeated_enemies += 1
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -448,7 +450,7 @@ def level1():
             game_over()
             run = False
 
-        if defeated_enemies >= 15:
+        if defeated_enemies >= 1:
             return True
 
         pygame.display.flip()
