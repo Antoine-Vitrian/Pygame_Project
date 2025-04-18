@@ -71,27 +71,46 @@ class Map:
         entities = [player] + [enemy for enemy in enemies]
         
         for entity in entities:
-            entity_area = entity.rect.inflate(100, 100)  # Área 100px maior em cada direção
+            entity_area = entity.rect.inflate(20, 20)  # Área 20px maior em cada direção
 
             for block in self.collision_tiles:
                 if not entity_area.colliderect(block):
                     continue  # Pula blocos longe demais
-
-                elif block.colliderect(entity) and block:
-                    if entity.speed_x > 0 and block.centerx > entity.rect.centerx:
-                        entity.speed_x = 0
+                
+                #Colisões no eixo X
+                if block.colliderect(entity.rect.x + entity.speed_x, entity.rect.y, entity.rect.width, entity.rect.height) and entity.rect.centery in range(block.top, block.bottom):
+                    if entity.speed_x > 0:
                         entity.rect.right = block.left
-                    elif entity.speed_x < 0 and block.centerx < entity.rect.centerx:
-                        entity.speed_x = 0
-                        entity.rect.left = block.right      
-                    elif entity.speed_y > 0 and block.centery > entity.rect.centery:
-                        entity.speed_y = 0
-                        entity.rect.bottom = block.top
-                    elif entity.speed_y < 0 and block.centery < entity.rect.centery:
-                        entity.speed_y = 0
-                        entity.rect.top = block.bottom
+                        entity.speed_x -= entity.speed_x
+                    elif entity.speed_x < 0:
+                        entity.speed_x -= entity.speed_x
+                        entity.rect.left = block.right
+
                     if isinstance(entity, Boss1):
                         entity.collided = True
+                
+                # Colisões no eixo Y
+                if block.colliderect(entity.rect.x, entity.rect.y + entity.speed_x, entity.rect.width, entity.rect.height) and entity.rect.centerx in range(block.left, block.right):
+                    if entity.speed_y > 0 and block.centery > entity.rect.bottom:
+                        entity.rect.bottom = block.top
+                        entity.speed_y -= player.speed_y
+                    elif entity.speed_y < 0 and block.centery < entity.rect.top:
+                        entity.rect.top -= player.speed_y
+                        entity.speed_y = 0
+
+                    if isinstance(entity, Boss1):
+                        entity.collided = True
+
+            # Trazer de volta ao mapa caso alguém saia do mapa
+            if entity.rect.x < 0:
+                entity.rect.x += 170
+            elif entity.rect.x > self.width:
+                entity.rect.x -= 170
+
+            if entity.rect.y < 0:
+                entity.rect.y += 170
+            elif entity.rect.y > self.height:
+                entity.rect.y -= 170
 
         for blt in blts:
             for tile in self.collision_tiles:

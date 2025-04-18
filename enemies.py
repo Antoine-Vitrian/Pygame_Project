@@ -1,6 +1,6 @@
 import pygame
 import math
-from random import randint
+from random import randrange, randint
 from guns import Gun, Blt
 from camera import camera
 from sprites import SpriteSheet
@@ -250,9 +250,15 @@ class Boss1():
 
     def change_direction(self, curr_time):
         if curr_time - self.last_change >= self.change_cooldown or self.collided:
-            self.direction = math.radians(randint(-180, 180))
+            if int(self.direction) in range(int(math.radians(-135)), int(math.radians(45))):
+                self.direction = math.radians(randrange(46, 180))
+
+            else:
+                self.direction = math.radians(randrange(-135, 45))
+
             self.last_change = curr_time
             self.collided = False
+            print(self.direction)
 
         return math.cos(self.direction), math.sin(self.direction)
         

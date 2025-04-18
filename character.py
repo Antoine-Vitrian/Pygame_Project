@@ -34,7 +34,7 @@ class Player():
         self.speed_x = 0
         self.speed_y = 0
         self.acc = 2
-        self.friction = 0.7
+        self.friction = 0.3
 
 
     def update(self, screen):
@@ -51,9 +51,8 @@ class Player():
 
         self.inputs(screen)
 
-        if self.speed_x >= 0.1 or self.speed_x <= -0.1 or self.speed_y >= 0.1 or self.speed_y <= -0.1:
-            self.speed_x *= self.friction
-            self.speed_y *= self.friction
+        # Checa se está andando ou não
+        if abs(self.speed_x) != 0 or abs(self.speed_y) != 0:
             if self.state == 'idle':
                 self.frame = 0
                 self.state = 'walking'
@@ -61,8 +60,18 @@ class Player():
             if self.state == 'walking':
                 self.frame = 0
                 self.state = 'idle'
-                self.speed_x = 0
-                self.speed_y = 0
+
+        # Se estiver andando diminui a velocidade para cada eixo
+        if abs(self.speed_x) >= 1:
+            self.speed_x -= self.friction * self.speed_x
+        else:
+            self.speed_x = 0
+
+        if abs(self.speed_y) >= 1:
+            self.speed_y -= self.friction * self.speed_y
+        else:
+            self.speed_y = 0
+
 
         if not self.equiped:
             if self.speed_x > 0:
@@ -124,9 +133,10 @@ class Player():
         self.equiped = False
 
     def draw_life(self, screen):
+        
         #desenha a vida do jogador na tela
-        pygame.draw.rect(screen, (255, 0, 0), (50, 20, self.max_life * 2, 15))
-        pygame.draw.rect(screen, (0, 255, 0), (50, 20, self.life * 2, 15))
+        pygame.draw.rect(screen, (255, 0, 0), (50, 20, 300, 15))
+        pygame.draw.rect(screen, (0, 255, 0), (50, 20, 300 * self.life / self.max_life, 15))
 
     def show_ammo_packs(self, screen):
         # Texto
