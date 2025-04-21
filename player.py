@@ -29,11 +29,11 @@ class Player():
         self.invincible = False
         self.last_invincible = pygame.time.get_ticks()
         self.invincible_cooldown = 600
-        
+
         # Movimentação 
         self.speed_x = 0
         self.speed_y = 0
-        self.acc = 2
+        self.acc = 1.5
         self.friction = 0.3
 
 
@@ -50,6 +50,9 @@ class Player():
             self.invincible = False
 
         self.inputs(screen)
+
+        self.rect.x += self.speed_x
+        self.rect.y += self.speed_y
 
         # Checa se está andando ou não
         if abs(self.speed_x) != 0 or abs(self.speed_y) != 0:
@@ -78,9 +81,6 @@ class Player():
                 self.direction = 'right'
             elif self.speed_x < 0: 
                 self.direction = 'left' 
-
-        self.rect.x += self.speed_x
-        self.rect.y += self.speed_y
 
         self.draw_player(screen)
 

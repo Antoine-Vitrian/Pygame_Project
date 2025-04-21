@@ -389,7 +389,6 @@ class Bazooka():
     def update(self, plr, screen, blts):
         keys_pressed = pygame.key.get_pressed()
         mouse_buttons = pygame.mouse.get_pressed()
-        current_time = pygame.time.get_ticks()
 
         if self.equiped == False:
             screen.blit(self.image, (self.rect.x - camera.x, self.rect.y - camera.y)) # desenha a arma jogada no chão

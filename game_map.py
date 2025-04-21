@@ -78,25 +78,26 @@ class Map:
                     continue  # Pula blocos longe demais
                 
                 #Colisões no eixo X
-                if block.colliderect(entity.rect.x + entity.speed_x, entity.rect.y, entity.rect.width, entity.rect.height) and entity.rect.centery in range(block.top, block.bottom):
+                if block.colliderect(entity.rect.x + entity.speed_x, entity.rect.y, entity.rect.width, entity.rect.height):
                     if entity.speed_x > 0:
-                        entity.rect.right = block.left
-                        entity.speed_x -= entity.speed_x
+                        entity.rect.right = block.left - 2
+                        entity.speed_x = 0
                     elif entity.speed_x < 0:
-                        entity.speed_x -= entity.speed_x
-                        entity.rect.left = block.right
+                        entity.rect.left = block.right + 2
+                        entity.speed_x = 0
 
                     if isinstance(entity, Boss1):
                         entity.collided = True
                 
                 # Colisões no eixo Y
-                if block.colliderect(entity.rect.x, entity.rect.y + entity.speed_x, entity.rect.width, entity.rect.height) and entity.rect.centerx in range(block.left, block.right):
-                    if entity.speed_y > 0 and block.centery > entity.rect.bottom:
-                        entity.rect.bottom = block.top
-                        entity.speed_y -= player.speed_y
-                    elif entity.speed_y < 0 and block.centery < entity.rect.top:
-                        entity.rect.top -= player.speed_y
+                if block.colliderect(entity.rect.x, entity.rect.y + entity.speed_y, entity.rect.width, entity.rect.height):
+                    if entity.speed_y > 0:
+                        entity.rect.bottom = block.top - 2
                         entity.speed_y = 0
+                    elif entity.speed_y < 0:
+                        entity.rect.top = block.bottom + 2
+                        entity.speed_y = 0
+
 
                     if isinstance(entity, Boss1):
                         entity.collided = True

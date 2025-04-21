@@ -2,7 +2,7 @@ import pygame
 import sys
 from random import randrange, randint
 
-from character import Player
+from player import Player
 from guns import *
 from enemies import Enemy, Boss1
 from camera import camera
@@ -22,10 +22,8 @@ FPS = 60
 ANIMATION_COOLDOWN = 60
 
 # Mapa
-
 map = Map("./map\mapa-boss\mapboss.tmx")
 
-# Tiled map
 
 # Menu
 menu_logo = pygame.image.load('Img/logo/logo_semfundo.png')
@@ -55,10 +53,7 @@ player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characte
 
 player.rect.clamp_ip(camera)
 
-# Armas
-init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
-
-gun_spawn_cooldown = 0
+gun_spawn_cooldown = 8000
 last_gun_spawn = pygame.time.get_ticks()
 gun_spawn_chance = 0
 
@@ -89,15 +84,19 @@ game_boss = Boss1('')
 # Funções para o jogo
 
 def reset(player):
+    global loaded_enemies
     global last_spawned_enemy
     global enemy_spawn_chance
     global game_guns
     global loaded_guns
     global last_gun_spawn
     global gun_spawn_chance
+    global loaded_items
     global last_item_spawn
     global item_spawn_chance
 
+    # Armas
+    init_pistol = Gun(PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
     laser_gun = Laser_gun(300, 300, 200, 'Img/Armas/laser_gun.png')
     bazooka = Bazooka(100, 100, 10, 'Img/Armas/bazuca_FW1000.png', 100, ANIMATION_COOLDOWN, 'Img/other/bazooka_spritesheet.png')
     gun = Gun(500, 450, 50, 'Img/Armas/arma_RW4.png', 18, 80, 8, True)
@@ -111,31 +110,33 @@ def reset(player):
     item_spawn_chance = 0
 
     # Limpa os inimigos
-    for enemy in loaded_enemies:
-        loaded_enemies.remove(enemy)
+    loaded_enemies.clear()
     # Reseta as armas
-    for gun in loaded_guns:
-        loaded_guns.remove(gun)
+    loaded_guns.clear()
     loaded_guns.append(init_pistol)
     #limpa os itens
-    for item in loaded_items:
-        loaded_items.remove(item)
+    loaded_items.clear()
 
     # Reseta as armas
     game_guns = [gun, laser_gun, bazooka]
-    pistol = loaded_guns[0]
-    pistol.rect.topleft = (PLAYER_INITIAL_X + 50, PLAYER_INITIAL_Y + 50)
-    pistol.curr_ammo = pistol.ammo
 
-    for gun in game_guns:
-        gun.equiped = False
+    # Reseta as balas
+    player_blts.clear()
+    enemies_blts.clear()
 
     # Reseta o jogador
     player.equiped = False
+    player.weapon = None
+    player.frame = 0
     player.life = PLAYER_MAX_HP
     player.rect.topleft = (PLAYER_INITIAL_X, PLAYER_INITIAL_Y)
     player.ammo_pack = INITIAL_AMMO[0]
     player.bazooka_ammo_pack = INITIAL_AMMO[1]
+
+    # Reseta a camera
+    camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
+    camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
+
 
 def item_handler(items, guns, plr_blts, enemy_blts, spawn_guns=True):
     current_time = pygame.time.get_ticks()
@@ -186,16 +187,18 @@ def item_handler(items, guns, plr_blts, enemy_blts, spawn_guns=True):
                 print('gun spawned')
     
     handle_blts(plr_blts, enemy_blts)
-    for gun in guns:
-        if not isinstance(gun, Laser_gun):
-            gun.update(player, screen, player_blts)
-        else:
-            gun.update(player, screen, loaded_enemies)
 
-        if gun.equiped:
-            gun.draw_ammo(screen)
-        elif not player.equiped:
-            gun.check_equip(player)
+    for gun in guns:
+        if gun:
+            if not isinstance(gun, Laser_gun):
+                gun.update(player, screen, player_blts)
+            else:
+                gun.update(player, screen, loaded_enemies)
+
+            if gun.equiped:
+                gun.draw_ammo(screen)
+            elif not player.equiped:
+                gun.check_equip(player)
 
 def handle_blts(plr_blts, enemy_blts):
     all_blts = plr_blts + enemy_blts
@@ -280,8 +283,6 @@ def update_screen(player, camera):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
 
-    player.update(screen)
-
     # prende o jogador na tela
     if player.speed_x > 0 and player.rect.x + player.rect.width >= map.width:
             player.speed_x = 0
@@ -305,7 +306,8 @@ def first_dialog():
     
 
     dialogo = [
-        'ERIK: Eu voltei com sucesso Viktor! Estou no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava! Só que... espera, acho que a máquina não estava 100% pronta, viu? As armas estão caindo do céu!',
+        'ERIK: Eu voltei com sucesso Viktor! Estou no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava!',
+        'ERIK: Só que... espera, acho que a máquina não estava 100% pronta, viu? As armas estão caindo do céu!',
         'VIKTOR: Erik, isso não está certo. A instabilidade da máquina...',
         'VIKTOR: As armas não deveriam estar caindo assim. Isso pode estar afetando o tempo! Você precisa se apressar! Não podemos deixar que isso piore!',
         'ERIK: Certo, tem munição caindo para todo lado! Eu... não esperava que fosse ficar tão caótico assim. O que mais pode dar errado?',
@@ -318,17 +320,23 @@ def first_dialog():
     while dialog:
         clock.tick(FPS)
 
-        imgs = ['Img/Armas/laser_gun.png', 'Img/tiles/arame_farpado.png']
+        # caminho das imagens do Erik e do Viktor respectivamente
+        imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+        
+        # Carregar texto e imagem de cada um dos personagens
         if 'erik:' in dialogo[text_counter].lower():
+            text = dialogo[text_counter].replace('ERIK: ', '')
             img = pygame.image.load(imgs[0])
-        elif 'viktor:' in dialogo[text_counter].lower():
+        else:
+            text = dialogo[text_counter].replace('VIKTOR: ', '')
             img = pygame.image.load(imgs[1]) 
         
-        if dialog_box.draw(screen, (position_x, position_y), dialogo[text_counter], img):
+
+        if dialog_box.draw(screen, (position_x, position_y), text, img):
             if text_counter < len(dialogo) - 1 and dialog_box.done:
                 text_counter += 1
                 dialog_box.reset()
-            elif text_counter >= len(dialogo) - 1:
+            elif text_counter >= len(dialogo):
                 dialog = False
 
         for event in pygame.event.get():
@@ -383,8 +391,13 @@ def boss_level1():
     game_boss.last_circle_atk = pygame.time.get_ticks()
     game_boss.last_plr_atk = pygame.time.get_ticks()
 
-    for enemy in loaded_enemies:
-        loaded_enemies.remove(enemy)
+    # Remove todos os inimigos do mapa
+    loaded_enemies.clear()
+
+    # Remove todas as armas que não estão equipadas
+    for gun in loaded_guns:
+        if not gun.equiped:
+            loaded_guns.remove(gun)
 
     loaded_enemies.append(game_boss)
 
@@ -395,8 +408,10 @@ def boss_level1():
         map.draw_map(screen)
         map.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts)
 
+        player.update(screen)
+
         update_screen(player, camera)
-        item_handler(loaded_items, [player.weapon], player_blts, enemies_blts)
+        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, spawn_guns=False)
         enemies_handler(loaded_enemies, screen, player, boss_level=True)
 
         if player.life <= 0:
@@ -404,7 +419,7 @@ def boss_level1():
             boss = False
 
         elif game_boss.life <= 0:
-            pass # Tela de vitória
+            pass #TODO Tela de vitória
             boss = False
 
         for event in pygame.event.get():
@@ -417,7 +432,11 @@ def boss_level1():
 
 def level1():
     defeated_enemies = 0
-    game_started = False
+
+    map.draw_map(screen) # desenha o mapa (background)
+    update_screen(player, camera)
+    player.update(screen)
+    first_dialog()
 
     run = True
     while run:
@@ -425,11 +444,9 @@ def level1():
 
         map.draw_map(screen) # desenha o mapa (background)
         map.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts) # checa colisões no mapa
-        update_screen(player, camera) # desenha o jogo e os objetos (precisa estar depois do mapa)
-
-        if not game_started:
-            first_dialog()
-            game_started = True
+        
+        player.update(screen)
+        update_screen(player, camera)
 
         item_handler(loaded_items, loaded_guns, player_blts, enemies_blts)
 
@@ -440,6 +457,9 @@ def level1():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_i:
+                    print(player.weapon, player.equiped, loaded_guns, player_blts, enemies_blts)
 
             if event.type == EQUIP_EVENT:
                 player.equip()

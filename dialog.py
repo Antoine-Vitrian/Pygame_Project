@@ -5,7 +5,6 @@ class DialogBox():
         self.image_path = image_path
         self.image = pygame.image.load(image_path)
         self.char_box = pygame.image.load('Img/other/char_box.png')
-        self.image.blit(self.char_box, (20, (self.image.get_height() - self.char_box.get_height())//2))
         self.font = pygame.font.Font('fonts/Pixel_Digivolve.otf', 18)
         self.counter = 0
         self.line_counter = 0
@@ -17,9 +16,19 @@ class DialogBox():
     def draw(self, screen, pos, text, img):
         keys_pressed = pygame.key.get_pressed()
 
+        # Ajusta o tamanho da imagem
+        size = self.char_box.get_width() - 15
+        resized_img = pygame.transform.scale(img, (size, size))
+
+        char_box_pos = (20, (self.image.get_height() - self.char_box.get_height()) // 2)
+        self.image.blit(self.char_box, char_box_pos)
+
+        img_x = char_box_pos[0] + (self.char_box.get_width() // 2 - resized_img.get_width() // 2)
+        img_y = char_box_pos[1] + (self.char_box.get_height() // 2 - resized_img.get_height() // 2)
+        self.image.blit(resized_img, (img_x, img_y))
+
         screen.blit(self.image, pos)
         self.write(text)
-        self.char_box.blit(img, ((self.char_box.get_width() - img.get_width())//2, self.char_box.get_height() - img.get_height()))
         skip_text = self.font.render('Pressione esc para pular', True, (100, 150, 255))
         screen.blit(skip_text, (pos[0] + self.image.get_width() - skip_text.get_width(), pos[1] + self.image.get_height()))
 
