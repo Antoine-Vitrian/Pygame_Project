@@ -128,6 +128,8 @@ def reset(player):
     player.equiped = False
     player.weapon = None
     player.frame = 0
+    player.direction = 'right'
+    player.state = 'idle'
     player.life = PLAYER_MAX_HP
     player.rect.topleft = (PLAYER_INITIAL_X, PLAYER_INITIAL_Y)
     player.ammo_pack = INITIAL_AMMO[0]
@@ -302,13 +304,6 @@ def update_screen(player, camera):
     map.draw_map(screen)
 
     # Jogador, inimigos e itens
-    # player
-    player.draw_player(screen)
-
-    # inimigos
-    for enemy in loaded_enemies:
-        enemy.update(screen, player, enemies_blts)
-
     # armas
     for gun in loaded_guns:
         if gun:
@@ -321,6 +316,13 @@ def update_screen(player, camera):
                 gun.draw_ammo(screen)
             elif not player.equiped:
                 gun.check_equip(player)
+
+    # player
+    player.draw_player(screen)
+
+    # inimigos
+    for enemy in loaded_enemies:
+        enemy.update(screen, player, enemies_blts)
 
     # balas
     all_blts = player_blts + enemies_blts
@@ -344,6 +346,8 @@ def first_dialog():
     position_x = (SCREEN_WIDTH - dialog_box.image.get_width()) // 2
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
     
+    # caminho das imagens do Erik e do Viktor respectivamente
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
 
     dialogo = [
         'ERIK: Eu voltei com sucesso Viktor! Estou no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava!',
@@ -359,9 +363,6 @@ def first_dialog():
     dialog = True
     while dialog:
         clock.tick(FPS)
-
-        # caminho das imagens do Erik e do Viktor respectivamente
-        imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
         
         # Carregar texto e imagem de cada um dos personagens
         if 'erik:' in dialogo[text_counter].lower():
@@ -388,10 +389,64 @@ def first_dialog():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     dialog = False
-                # if event.key == pygame.K_SPACE :
                     
-            
-                    
+        pygame.display.flip()
+
+def boss_dialog():
+    # caixa de dialogo 
+    dialog_box = DialogBox('Img/other/dialog_box.png', (255, 255, 255))
+
+    position_x = (SCREEN_WIDTH - dialog_box.image.get_width()) // 2
+    position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
+
+    # caminho das imagens do Erik e do Viktor respectivamente
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+
+    dialogo = [
+        'ERIK: Viktor...? Não pode ser... Você veio! Conseguiu fazer a viagem também?',
+        'VIKTOR: Sim, Erik... Consegui. Mas não pelo mesmo motivo que você.',
+        'ERIK: Do que você está falando? Eu não estou te entendendo...',
+        'ERIK: Isso é sobre nosso sonho de mudar Varsênia? Não prometemos um ao outro que iríamos mudar isso',
+        'VIKTOR: Eu pensei que fosse possível. Mas não é. Zypharia me fez ver... que estamos lutando uma guerra perdida. Que estamos tentando salvar algo que já morreu há muito tempo.',
+        'ERIK: Eles te compraram... não foi? Eles te prometeram conforto, poder... e você aceitou?! Você traiu tudo que a gente construiu!',
+        'VIKTOR: Você acha que foi fácil? Eu vi Varsênia se desfazendo diante dos meus olhos, dia após dia.', 
+        'VIKTOR: Eu tentei manter a fé. Mas você... você ainda acredita em fantasias. Mudar o passado não vai apagar as cicatrizes. Vai apenas criar outras.',
+        'ERIK: Isso não é sobre cicatrizes! É sobre dar ao nosso povo uma chance! Uma chance de lutar, de viver! E você... era meu irmão, Viktor!',
+        'VIKTOR: Ainda é difícil, Erik. Mas... eu tomei minha decisão. Eles me prometeram paz... e depois de tudo, eu acho que é isso que eu quero. Mesmo que custe a sua vida.',
+        'ERIK: Então venha. Se vai me matar, olhe nos meus olhos e veja o que ainda resta de Varsênia neles. Veja se consegue puxar o gatilho sabendo que a esperança morreu com você.',
+        'VIKTOR: Adeus, Erik...'
+        ]
+    text_counter = 0
+
+    dialog = True
+    while dialog:
+        clock.tick(FPS)
+        
+        # Carregar texto e imagem de cada um dos personagens
+        if 'erik:' in dialogo[text_counter].lower():
+            text = dialogo[text_counter].replace('ERIK: ', '')
+            img = pygame.image.load(imgs[0])
+        else:
+            text = dialogo[text_counter].replace('VIKTOR: ', '')
+            img = pygame.image.load(imgs[1]) 
+        
+
+        if dialog_box.draw(screen, (position_x, position_y), text, img):
+            if text_counter < len(dialogo) - 1 and dialog_box.done:
+                text_counter += 1
+                dialog_box.reset()
+            else:
+                dialog = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    dialog = False
+                        
         pygame.display.flip()
 
 # -----------------Telas--------------------------
@@ -430,6 +485,8 @@ def game_over():
         pygame.display.flip()
 
 def boss_level1():
+    global camera
+
     game_boss.life = game_boss.max_life
     game_boss.blts = []
     game_boss.last_circle_atk = pygame.time.get_ticks()
@@ -444,6 +501,28 @@ def boss_level1():
             loaded_guns.remove(gun)
 
     loaded_enemies.append(game_boss)
+
+    # Define a posição do jogador e do boss
+    player.rect.x, player.rect.y = 470, 700
+    player.direction = 'right'
+    player.state = 'idle'
+    player.frame = 0
+
+    game_boss.rect.x, game_boss.rect.y = 800, 700
+
+    camera.centerx = (player.rect.centerx + game_boss.rect.centerx)//2
+    camera.centery = player.rect.centery
+    map.draw_map(screen)
+    player.draw_player(screen)
+    for enemy in loaded_enemies:
+        enemy.update(screen, player, enemies_blts)
+    boss_dialog()
+
+    # Caso o jogador não esteja segurando uma arma
+    if not len(loaded_guns) and player.weapon == None:
+        loaded_guns.append(
+            Gun(530, 740, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
+        )
 
     boss = True
     while boss:
@@ -476,7 +555,6 @@ def boss_level1():
 def level1():
     defeated_enemies = 0
 
-    map.draw_map(screen) # desenha o mapa (background)
     update_screen(player, camera)
     player.update(screen)
     first_dialog()
@@ -512,7 +590,7 @@ def level1():
             game_over()
             run = False
 
-        if defeated_enemies >= 1:
+        if defeated_enemies >= 0:
             return True
 
         pygame.display.flip()

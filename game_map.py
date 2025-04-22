@@ -97,6 +97,12 @@ class Map:
             for block in self.collision_tiles:
                 if not entity_area.colliderect(block):
                     continue  # Pula blocos longe demais
+
+                if entity.rect.colliderect(block):
+                    if block.centery > entity.rect.centery:
+                        entity.speed_y -= 6
+                    elif block.centery < entity.rect.centery:
+                        entity.speed_y += 6
                 
                 #Colisões no eixo X
                 if block.colliderect(entity.rect.x + entity.speed_x, entity.rect.y, entity.rect.width, entity.rect.height):

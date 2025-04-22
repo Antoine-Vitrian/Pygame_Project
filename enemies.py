@@ -191,7 +191,7 @@ class Boss1():
         self.surface.fill((255, 50, 50))
         # self.image = pygame.image.load(image) 
         self.rect = self.surface.get_rect()
-        self.rect.x, self.rect.y = (900, 400)
+        self.rect.x, self.rect.y = (800, 700)
 
         #status
         self.max_life = 600
