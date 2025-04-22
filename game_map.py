@@ -28,6 +28,7 @@ class Map:
         self.width = self.tmx_data.width * self.tmx_data.tilewidth * TILE_SCALE
         self.height = self.tmx_data.height * self.tmx_data.tileheight * TILE_SCALE
         self.scaled_tiles = []
+        self.abvplr_scaled_tiles = []
         self.entities = []
         self.collision_tiles = []
         
@@ -36,10 +37,10 @@ class Map:
 
         surface.fill('black')
 
-        if not len(self.scaled_tiles) and not len(self.collision_tiles):
+        if not len(self.scaled_tiles) and not len(self.collision_tiles) and not len(self.abvplr_scaled_tiles):
             for layer in self.tmx_data.layers:
                 # tiles que serão desenhadas
-                if isinstance(layer, pytmx.TiledTileLayer) and layer.name != 'colisoes':
+                if isinstance(layer, pytmx.TiledTileLayer) and layer.name not in ['colisoes', 'acima_player']:
                     for x, y, gid in layer:
                         tile = self.tmx_data.get_tile_image_by_gid(gid)
                         if tile:
@@ -64,9 +65,29 @@ class Map:
                                     self.tmx_data.tileheight * TILE_SCALE
                                 )
                             )
+                if layer.name == 'acima_player':
+                    for x, y, gid in layer:
+                        tile = self.tmx_data.get_tile_image_by_gid(gid)
+                        if tile:
+                            tile = pygame.transform.scale(
+                                tile,
+                                (self.tmx_data.tilewidth *  TILE_SCALE, self.tmx_data.tileheight * TILE_SCALE)
+                            )
+                            self.abvplr_scaled_tiles.append({
+                                "tile": tile,
+                                "x_pos": x * self.tmx_data.tilewidth * TILE_SCALE,
+                                "y_pos": y * self.tmx_data.tileheight * TILE_SCALE
+                            })
+
+                    
         for tile in self.scaled_tiles:
             surface.blit(tile["tile"], (tile["x_pos"] - camera.x,tile["y_pos"] - camera.y))    
-            
+
+    def draw_above_player(self, surface):
+        for tile in self.abvplr_scaled_tiles:
+            surface.blit(tile["tile"], (tile["x_pos"] - camera.x, tile["y_pos"] - camera.y))
+
+
     def check_block_collisions(self, player, enemies, blts):
         entities = [player] + [enemy for enemy in enemies]
         

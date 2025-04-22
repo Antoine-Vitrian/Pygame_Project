@@ -82,7 +82,6 @@ class Player():
             elif self.speed_x < 0: 
                 self.direction = 'left' 
 
-        self.draw_player(screen)
 
     def inputs(self, screen):
         keys_pressed = pygame.key.get_pressed()
@@ -98,7 +97,7 @@ class Player():
             self.speed_y += self.acc
 
         if self.equiped == True or keys_pressed[pygame.K_c]:
-            self.show_ammo_packs(screen)
+            self.draw_ammo_packs(screen)
 
     def draw_player(self, screen):
         current_time = pygame.time.get_ticks()
@@ -138,7 +137,7 @@ class Player():
         pygame.draw.rect(screen, (255, 0, 0), (50, 20, 300, 15))
         pygame.draw.rect(screen, (0, 255, 0), (50, 20, 300 * self.life / self.max_life, 15))
 
-    def show_ammo_packs(self, screen):
+    def draw_ammo_packs(self, screen):
         # Texto
         #fonte da munição
         font = pygame.font.Font('freesansbold.ttf', 24) 
@@ -151,10 +150,8 @@ class Player():
         bazooka_ammo_pack = pygame.image.load('Img/other/bazooka_ammo.png')
         dist = 26
 
-
         for pack in range(self.ammo_pack):
             screen.blit(ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 60))
             
         for pack in range(self.bazooka_ammo_pack):
             screen.blit(bazooka_ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 30))
-
