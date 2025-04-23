@@ -18,7 +18,7 @@ class AmmoPack:
     def update(self, screen, plr):
         keys_pressed = pygame.key.get_pressed()
 
-        if self.rect.colliderect(plr) and keys_pressed[pygame.K_f]: # aumenta a munição reserva do player
+        if self.rect.colliderect(plr) and keys_pressed[pygame.K_e]: # aumenta a munição reserva do player
             if self.ammo_type == 'gun':
                 plr.ammo_pack += 1
             elif self.ammo_type == 'bazooka':

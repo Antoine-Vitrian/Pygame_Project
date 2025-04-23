@@ -28,7 +28,7 @@ class Player():
         self.weapon = None
         self.invincible = False
         self.last_invincible = pygame.time.get_ticks()
-        self.invincible_cooldown = 600
+        self.invincible_cooldown = 800
 
         # Movimentação 
         self.speed_x = 0
@@ -82,6 +82,8 @@ class Player():
             elif self.speed_x < 0: 
                 self.direction = 'left' 
 
+        if self.weapon:
+            self.weapon.draw_ammo(screen)
 
     def inputs(self, screen):
         keys_pressed = pygame.key.get_pressed()
@@ -155,3 +157,23 @@ class Player():
             
         for pack in range(self.bazooka_ammo_pack):
             screen.blit(bazooka_ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 30))
+
+class ShowKey():
+    def __init__(self):
+        self.sprite_image = pygame.image.load('Img/other/E_key.png')
+        self.sprite_sheet = SpriteSheet(self.sprite_image)
+        self.animation_list = self.sprite_sheet.get_animations([8], 14, 14, 2)
+        self.frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.cooldown = 50
+
+    def show_key(self, screen, player):
+        curr_time = pygame.time.get_ticks()
+
+        blit_img = self.animation_list[0][self.frame]
+        screen.blit(blit_img, (player.rect.x + player.rect.width//2 - blit_img.get_width()//2 - camera.x, player.rect.y - 30 - camera.y))
+        if curr_time - self.last_update >= self.cooldown:
+            self.frame += 1
+            self.last_update = curr_time
+            if self.frame >= len(self.animation_list[0]):
+                self.frame = 0

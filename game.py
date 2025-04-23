@@ -2,7 +2,7 @@ import pygame
 import sys
 from random import randrange, randint
 
-from player import Player
+from player import Player, ShowKey
 from guns import *
 from enemies import Enemy, Boss1
 from camera import camera
@@ -22,8 +22,8 @@ FPS = 60
 ANIMATION_COOLDOWN = 60
 
 # Mapa
-map = Map("./map\mapa-boss\mapboss.tmx")
-
+map_boss = Map("./map/mapa-boss/mapboss.tmx")
+map_1 = Map("./map/primeiro_mapa/fase_1.tmx")
 
 # Menu
 menu_logo = pygame.image.load('Img/logo/logo_semfundo.png')
@@ -50,6 +50,7 @@ PLAYER_INITIAL_Y = 300
 INITIAL_AMMO = (5, 4)
 
 player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characters/protagonista.png', 2.5, ANIMATION_COOLDOWN, [1, 3], 28, 31)
+e_key = ShowKey()
 
 player.rect.clamp_ip(camera)
 
@@ -84,7 +85,7 @@ game_boss = Boss1('')
 
 # Funções para o jogo
 
-def reset(player):
+def reset(player, map):
     global loaded_enemies
     global last_spawned_enemy
     global enemy_spawn_chance
@@ -140,6 +141,63 @@ def reset(player):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
 
+def fade_in(screen):
+    fade_surface = pygame.Surface((camera.width, camera.height))
+    fade_surface.fill((0, 0, 0))
+    fade_alpha = 0
+
+    fade_ativo = True
+
+    while True:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        if fade_ativo:
+            fade_alpha += 5
+            if fade_alpha >= 255:
+                fade_alpha = 255
+                fade_ativo = False
+                break
+
+        fade_surface.set_alpha(fade_alpha)
+        screen.blit(fade_surface, (0, 0))
+
+        pygame.display.flip()
+
+def fade_out(screen, map):
+    fade_surface = pygame.Surface((camera.width, camera.height))
+    fade_surface.fill((0, 0, 0))
+    fade_alpha = 255
+
+    fade_ativo = True
+
+    while True:
+        clock.tick(FPS)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        update_screen(player, camera, map)
+        game_boss.last_circle_atk = pygame.time.get_ticks()
+        game_boss.last_plr_atk = pygame.time.get_ticks()
+
+        if fade_ativo:
+            fade_alpha -= 5
+            if fade_alpha <= 0:
+                fade_alpha = 0
+                fade_ativo = False
+                break
+
+        fade_surface.set_alpha(fade_alpha)
+        screen.blit(fade_surface, (0, 0))
+
+        pygame.display.flip()
 
 def item_handler(items, guns, plr_blts, enemy_blts, map, spawn_guns=True):
     current_time = pygame.time.get_ticks()
@@ -241,7 +299,7 @@ def check_blt_collision(blt, target): # checa se a bala acertou o alvo
             target.life -= blt.damage
         blt.time_to_live = 0
 
-def enemies_handler(enemies, boss_level=False):
+def enemies_handler(enemies, map, boss_level=False):
     current_time = pygame.time.get_ticks()
     global last_spawned_enemy
     global enemy_spawn_chance
@@ -282,7 +340,7 @@ def enemies_handler(enemies, boss_level=False):
             if not isinstance(enemy, Boss1):
                 enemies.remove(enemy)
 
-def update_screen(player, camera):
+def update_screen(player, camera, map):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
 
@@ -313,10 +371,11 @@ def update_screen(player, camera):
             else:
                 gun.update(player, screen, loaded_enemies)
 
-            if gun.equiped:
-                gun.draw_ammo(screen)
-            elif not player.equiped:
+            if not player.equiped:
                 gun.check_equip(player)
+
+                if gun.rect.colliderect(player.rect):
+                    e_key.show_key(screen, player)
 
     # player
     player.draw_player(screen)
@@ -458,8 +517,9 @@ def main_menu():
         screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
 
         if start_btn.draw(screen):
-            reset(player)
+            reset(player, map_1)
             if level1():
+                fade_in(screen)
                 boss_level1()
 
         for event in pygame.event.get():
@@ -513,10 +573,14 @@ def boss_level1():
 
     camera.centerx = (player.rect.centerx + game_boss.rect.centerx)//2
     camera.centery = player.rect.centery
-    map.draw_map(screen)
+    map_boss.draw_map(screen)
     player.draw_player(screen)
     for enemy in loaded_enemies:
         enemy.update(screen, player, enemies_blts)
+
+    # voltar a tela para o mapa do boss
+    fade_out(screen, map_boss)
+
     boss_dialog()
 
     # Caso o jogador não esteja segurando uma arma
@@ -529,13 +593,13 @@ def boss_level1():
     while boss:
         clock.tick(FPS)
 
-        map.draw_map(screen)
-        map.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts)
+        map_boss.draw_map(screen)
+        map_boss.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts)
 
-        update_screen(player, camera)
+        update_screen(player, camera, map_boss)
         
-        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map, spawn_guns=False)
-        enemies_handler(loaded_enemies, boss_level=True)
+        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map_boss, spawn_guns=False)
+        enemies_handler(loaded_enemies, map_boss, boss_level=True)
 
         if player.life <= 0:
             game_over()
@@ -556,7 +620,7 @@ def boss_level1():
 def level1():
     defeated_enemies = 0
 
-    update_screen(player, camera)
+    update_screen(player, camera, map_1)
     player.update(screen)
     first_dialog()
 
@@ -564,14 +628,14 @@ def level1():
     while run:
         clock.tick(FPS)
 
-        map.draw_map(screen) # desenha o mapa (background)
-        map.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts) # checa colisões no mapa
+        map_1.draw_map(screen) # desenha o mapa (background)
+        map_1.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts) # checa colisões no mapa
         
-        update_screen(player, camera)
+        update_screen(player, camera, map_1)
 
-        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map)
+        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map_1)
 
-        if enemies_handler(loaded_enemies):
+        if enemies_handler(loaded_enemies, map_1):
             defeated_enemies += 1
 
         for event in pygame.event.get():

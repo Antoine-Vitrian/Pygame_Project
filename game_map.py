@@ -107,8 +107,6 @@ class Map:
                         entity.rect.left = block.right + 2
                         entity.speed_x = 0
 
-                    print('test x')
-
                     if isinstance(entity, Boss1):
                         entity.collided = True
                 
@@ -120,8 +118,6 @@ class Map:
                     elif entity.speed_y < 0 and entity.rect.centery > block.centery:
                         entity.rect.top = block.bottom + 2
                         entity.speed_y = 0
-
-                    print('test y')
 
                     if isinstance(entity, Boss1):
                         entity.collided = True
