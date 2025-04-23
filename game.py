@@ -81,6 +81,7 @@ enemies_blts = []
 
 # BOSS
 game_boss = Boss1('')
+
 # Funções para o jogo
 
 def reset(player):
