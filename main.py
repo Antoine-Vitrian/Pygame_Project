@@ -41,10 +41,11 @@ start_btn.rect.y -= start_btn.rect.height//2
 
 # Botões game over
 game_over_btn_img = pygame.image.load('Img/game_over/botao12.png')
-game_over_btn = Button(400, 500, game_over_btn_img, 3)
+btn_posx = camera.width//2 - game_over_btn_img.get_width()*3//2
+game_over_btn = Button(btn_posx, 500, game_over_btn_img, 3)
 
 # Jogador
-PLAYER_MAX_HP = 200
+PLAYER_MAX_HP = 1
 PLAYER_INITIAL_X = 300
 PLAYER_INITIAL_Y = 300
 INITIAL_AMMO = (5, 4)
