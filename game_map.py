@@ -15,10 +15,10 @@ TILE_SCALE = 4
 # Carrega o mapa .tmx
 
 
-TILES_SIZE = 32
 
-SCREEN_WIDTH = TILES_SIZE * 30
-SCREEN_HEIGHT = TILES_SIZE * 25
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 
 screen = create_screen(SCREEN_WIDTH, SCREEN_HEIGHT, 'game')
 
