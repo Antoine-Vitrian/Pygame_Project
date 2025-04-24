@@ -14,6 +14,7 @@ from dialog import DialogBox
 from map_tiled import *
 
 pygame.init()
+pygame.mixer.init()
 
 #--------------Variáveis----------------
 clock = pygame.time.Clock()
@@ -45,7 +46,7 @@ btn_posx = camera.width//2 - game_over_btn_img.get_width()*3//2
 game_over_btn = Button(btn_posx, 500, game_over_btn_img, 3)
 
 # Jogador
-PLAYER_MAX_HP = 1
+PLAYER_MAX_HP = 200
 PLAYER_INITIAL_X = 300
 PLAYER_INITIAL_Y = 300
 INITIAL_AMMO = (5, 4)
@@ -55,7 +56,7 @@ e_key = ShowKey()
 
 player.rect.clamp_ip(camera)
 
-gun_spawn_cooldown = 8000
+gun_spawn_cooldown = 0 #8000
 last_gun_spawn = pygame.time.get_ticks()
 gun_spawn_chance = 0
 
@@ -200,7 +201,7 @@ def fade_out(screen, map):
 
         pygame.display.flip()
 
-def item_handler(items, guns, plr_blts, enemy_blts, map, spawn_guns=True):
+def item_handler(items, plr_blts, enemy_blts, map, spawn_guns=True):
     current_time = pygame.time.get_ticks()
     # Items
     global last_item_spawn
@@ -365,8 +366,10 @@ def update_screen(player, camera, map):
 
     # Jogador, inimigos e itens
     # armas
-    for gun in loaded_guns:
-        if gun:
+
+    print(loaded_guns)
+    if len(loaded_guns):
+        for gun in loaded_guns:
             if not isinstance(gun, Laser_gun):
                 gun.update(player, screen, player_blts)
             else:
@@ -390,17 +393,21 @@ def update_screen(player, camera, map):
     curr_time = pygame.time.get_ticks()
 
     for bullet in all_blts:
-            if bullet.type == "gun":
-                screen.blit(bullet.surf, (bullet.rect.x - camera.x, bullet.rect.y - camera.y))
-            elif bullet.type == "explosive": # Lógica para animar a explosão
-                bullet.update(screen, curr_time, ANIMATION_COOLDOWN)
+        if bullet.type == "gun":
+            screen.blit(bullet.surf, (bullet.rect.x - camera.x, bullet.rect.y - camera.y))
+        elif bullet.type == "explosive": # Lógica para animar a explosão
+            bullet.update(screen, curr_time, ANIMATION_COOLDOWN)
 
     # tiles acima do jogador
     map.draw_above_player(screen)
 
     player.update(screen)
 
+    if game_boss in loaded_enemies:
+        game_boss.show_life(screen)
+
 def first_dialog():
+    pygame.mixer.music.stop()
     # caixa de dialogo 
     dialog_box = DialogBox('Img/other/dialog_box.png', (255, 255, 255))
 
@@ -454,6 +461,7 @@ def first_dialog():
         pygame.display.flip()
 
 def boss_dialog():
+    pygame.mixer.music.stop()
     # caixa de dialogo 
     dialog_box = DialogBox('Img/other/dialog_box.png', (255, 255, 255))
 
@@ -512,6 +520,7 @@ def boss_dialog():
 
 # -----------------Telas--------------------------
 def main_menu():
+    pygame.mixer.music.stop()
     menu = True
     while menu:
         screen.blit(fundo_menu,(0, 0))
@@ -519,6 +528,7 @@ def main_menu():
 
         if start_btn.draw(screen):
             reset(player, map_1)
+            fade_in(screen)
             if level1():
                 fade_in(screen)
                 boss_level1()
@@ -530,6 +540,7 @@ def main_menu():
         pygame.display.flip()
         
 def game_over():
+    pygame.mixer.music.stop()
     game_over_menu = True
     while game_over_menu:
 
@@ -549,6 +560,8 @@ def game_over():
 def boss_level1():
     global camera
 
+    pygame.mixer.music.stop()
+
     game_boss.life = game_boss.max_life
     game_boss.blts = []
     game_boss.last_circle_atk = pygame.time.get_ticks()
@@ -558,9 +571,8 @@ def boss_level1():
     loaded_enemies.clear()
 
     # Remove todas as armas que não estão equipadas
-    for gun in loaded_guns:
-        if not gun.equiped:
-            loaded_guns.remove(gun)
+    loaded_guns.clear()
+    loaded_guns.append(player.weapon)
 
     loaded_enemies.append(game_boss)
 
@@ -592,6 +604,8 @@ def boss_level1():
 
     boss = True
     while boss:
+
+
         clock.tick(FPS)
 
         map_boss.draw_map(screen)
@@ -599,7 +613,7 @@ def boss_level1():
 
         update_screen(player, camera, map_boss)
         
-        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map_boss, spawn_guns=False)
+        item_handler(loaded_items, player_blts, enemies_blts, map_boss, spawn_guns=False)
         enemies_handler(loaded_enemies, map_boss, boss_level=True)
 
         if player.life <= 0:
@@ -619,22 +633,30 @@ def boss_level1():
     
 
 def level1():
+    pygame.mixer.music.stop()
     defeated_enemies = 0
+    won = False
 
     update_screen(player, camera, map_1)
     player.update(screen)
     first_dialog()
 
+    # música da primeira fase 
+    pygame.mixer.music.load("audio/music/iron_maiden-wasted_years-fase1.mp3")
+    pygame.mixer.music.play(-1)
+    pygame.mixer.music.set_volume(0.2)
+
     run = True
     while run:
         clock.tick(FPS)
+        
 
         map_1.draw_map(screen) # desenha o mapa (background)
         map_1.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts) # checa colisões no mapa
         
         update_screen(player, camera, map_1)
 
-        item_handler(loaded_items, loaded_guns, player_blts, enemies_blts, map_1)
+        item_handler(loaded_items, player_blts, enemies_blts, map_1)
 
         if enemies_handler(loaded_enemies, map_1):
             defeated_enemies += 1
@@ -653,14 +675,20 @@ def level1():
                 player.dequip()
 
         if player.life <= 0:
+            fade_in(screen)
             game_over()
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 5:
-            return True
+        if defeated_enemies >= 1 and not won:
+            won_time = pygame.time.get_ticks()
+            won = True
+        if won:
+            if pygame.time.get_ticks() - won_time >= 500:
+                return True
 
         pygame.display.flip()
+    
 
 if __name__ == "__main__":
     main_menu()

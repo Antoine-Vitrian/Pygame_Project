@@ -27,6 +27,13 @@ class Gun():
         self.equiped = False
         self.x = (0, 0, 0) 
         self.hand = 'right'
+        # jogador
+        self.audio1 = pygame.mixer.Sound('audio/effects/manual.mp3')
+        self.audio1.set_volume(0.04)
+        #inimigos
+        self.audio2 = pygame.mixer.Sound('audio/effects/gun_shot.mp3')
+        self.audio2.set_volume(0.01)
+        self.enemy = False
         
         # balas
         self.damage = 20
@@ -145,7 +152,12 @@ class Gun():
             radians = math.radians(-self.angle)
             cos = math.cos(radians)
             sin = math.sin(radians)
-            
+
+            if not self.enemy:
+                self.audio1.play()
+            else:
+                self.audio2.play()
+
             return Blt(
                 rotated_bullet_surface,
                 bullet,
@@ -176,6 +188,8 @@ class Gun():
 
     # arma para o inimigo
     def update_enemy(self, enemy, screen, plr):
+        if not self.enemy:
+            self.enemy = True
         self.draw_gun(screen, enemy, (plr.rect.centerx - camera.x, plr.rect.centery - camera.y))
         self.get_angle((plr.rect.centerx, plr.rect.centery), enemy=True)
 
@@ -203,7 +217,9 @@ class Laser_gun():
         self.equiped = False
         self.angle = 0
         self.hand = 'right'
-
+        self.tiro_sfx = pygame.mixer.Sound('audio/effects/laser.mp3')
+        self.tiro_sfx.set_volume(0.1)
+        self.channel = None
 
     def update(self, plr, screen, enemies):
         keys_pressed = pygame.key.get_pressed()
@@ -234,10 +250,16 @@ class Laser_gun():
                     self.shooting = True
                     pygame.draw.line(screen, (255, 255, 0), *self.get_laser_pos(), 3)
                     self.curr_ammo -= 1
+
+                    # Toca o som só se ainda não estiver tocando
+                    if self.channel is None or not self.channel.get_busy():
+                        self.channel = self.tiro_sfx.play(-1)  # -1 = loop
                 else:
                     self.overheat_timer = 120
             else:
                 self.shooting = False
+                if self.channel is not None:
+                    self.channel.stop()
 
             # checa colisão
             for enemy in enemies:
@@ -254,14 +276,11 @@ class Laser_gun():
 
     def check_equip(self, plr):
         keys_pressed = pygame.key.get_pressed()
-        if self.equiped == False:
-        
-            if self.rect.colliderect(plr):
-                if keys_pressed[pygame.K_e] and plr.equiped == False:
-                    self.equiped = True
-                    plr.equiped = True
-                    plr.weapon = self  # define essa arma como equipada pelo jogador
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
+        if not self.equiped and self.rect.colliderect(plr) and keys_pressed[pygame.K_e] and plr.equiped == False:
+            self.equiped = True
+            plr.equiped = True
+            plr.weapon = self  # define essa arma como equipada pelo jogador
+            pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self):
         # calcula o ângulo da arma (com pygame.Vector2)
@@ -384,6 +403,8 @@ class Bazooka():
         self.equiped = False
         self.x = (0, 0, 0)  # Track previous mouse state
         self.hand = 'right'
+        self.tiro_sfx = pygame.mixer.Sound('audio/effects/bazuca2.mp3')
+        self.tiro_sfx.set_volume(0.1)
 
 
     def update(self, plr, screen, blts):
@@ -463,6 +484,8 @@ class Bazooka():
 
             # Calcula o tempo de vida da bala
             time = dist // self.blt_speed
+
+            self.tiro_sfx.play()
             
             return Exp_Blt(
                 self.animation_list[0],

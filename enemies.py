@@ -241,7 +241,6 @@ class Boss1():
                     self.last_plr_atk = current_time
 
             screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
-            self.show_life(screen)
 
     def look_player(self, plr):
         dist_x = self.rect.centerx - plr.rect.centerx
