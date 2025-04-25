@@ -1,14 +1,12 @@
 import pygame
 import math
-from random import randrange, randint
+from random import randrange
 from guns import Gun, Blt
 from camera import camera
 from sprites import SpriteSheet
 
 class Enemy():
     def __init__(self, x, y, image, animation_cooldown, sprite_size, life, ammo, acc, scale):
-        # self.surface = pygame.surface.Surface((50, 50)) # temporário até ter um sprite 
-        # self.surface.fill((80, 190, 255))
         self.sprite_image = pygame.image.load(image)
         self.sprite_sheet = SpriteSheet(self.sprite_image)
         self.sprite_width, self.sprite_height = sprite_size
@@ -257,7 +255,6 @@ class Boss1():
 
             self.last_change = curr_time
             self.collided = False
-            print(self.direction)
 
         return math.cos(self.direction), math.sin(self.direction)
         

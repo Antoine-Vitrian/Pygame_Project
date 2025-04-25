@@ -233,7 +233,7 @@ class Laser_gun():
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True:
                 self.equiped = False
-                pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
+                plr.equiped = False
             
             # calcula o ângulo da arma (com math)
             # dist_x = pos_x - self.rect.centerx + camera.x
@@ -276,7 +276,7 @@ class Laser_gun():
 
     def check_equip(self, plr):
         keys_pressed = pygame.key.get_pressed()
-        if not self.equiped and self.rect.colliderect(plr) and keys_pressed[pygame.K_e] and plr.equiped == False:
+        if not self.equiped and self.rect.colliderect(plr) and keys_pressed[pygame.K_e] and not plr.equiped:
             self.equiped = True
             plr.equiped = True
             plr.weapon = self  # define essa arma como equipada pelo jogador
@@ -417,7 +417,8 @@ class Bazooka():
         else:
             if keys_pressed[pygame.K_q] and plr.equiped == True: # evento para desequipar a arma
                 self.equiped = False
-                pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
+                plr.weapon = None
+                plr.equiped = False
 
             # Posição do mouse    
             pos_x, pos_y = pygame.mouse.get_pos()
@@ -451,14 +452,11 @@ class Bazooka():
 
     def check_equip(self, plr):
         keys_pressed = pygame.key.get_pressed()
-        if self.equiped == False:
-        
-            if self.rect.colliderect(plr):
-                if keys_pressed[pygame.K_e] and plr.equiped == False:
-                    self.equiped = True
-                    plr.equiped = True
-                    plr.weapon = self  # define essa arma como equipada pelo jogador
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
+        if not self.equiped and self.rect.colliderect(plr) and keys_pressed[pygame.K_e] and not plr.equiped:
+            self.equiped = True
+            plr.equiped = True
+            plr.weapon = self  # define essa arma como equipada pelo jogador
+            pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     #-----------------munição e balas-------------------------------
     def shoot(self, mouse_x, mouse_y):

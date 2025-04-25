@@ -2,8 +2,6 @@ import pygame
 from camera import create_screen, camera
 import pygame
 import pytmx
-from pytmx import load_pygame
-from pytmx import TiledImageLayer
 import pytmx.util_pygame
 from camera import create_screen, camera
 from enemies import Boss1
@@ -13,9 +11,6 @@ from enemies import Boss1
 pygame.init()
 TILE_SCALE = 4
 # Carrega o mapa .tmx
-
-
-
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600

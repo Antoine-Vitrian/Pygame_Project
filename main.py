@@ -342,7 +342,7 @@ def enemies_handler(enemies, map, boss_level=False):
             if not isinstance(enemy, Boss1):
                 enemies.remove(enemy)
 
-def update_screen(player, camera, map):
+def update_screen(player, camera, map, guns):
     camera.x = max(0, min(player.rect.x - SCREEN_WIDTH // 2, (map.width) - SCREEN_WIDTH))
     camera.y = max(0, min(player.rect.y - SCREEN_HEIGHT // 2, (map.height) - SCREEN_HEIGHT))
 
@@ -366,20 +366,17 @@ def update_screen(player, camera, map):
 
     # Jogador, inimigos e itens
     # armas
+    for gun in guns:
+        if not isinstance(gun, Laser_gun):
+            gun.update(player, screen, player_blts)
+        else:
+            gun.update(player, screen, loaded_enemies)
 
-    print(loaded_guns)
-    if len(loaded_guns):
-        for gun in loaded_guns:
-            if not isinstance(gun, Laser_gun):
-                gun.update(player, screen, player_blts)
-            else:
-                gun.update(player, screen, loaded_enemies)
+        if not gun.equiped:
+            gun.check_equip(player)
 
-            if not player.equiped:
-                gun.check_equip(player)
-
-                if gun.rect.colliderect(player.rect):
-                    e_key.show_key(screen, player)
+            if gun.rect.colliderect(player.rect):
+                e_key.show_key(screen, player)
 
     # player
     player.draw_player(screen)
@@ -405,6 +402,7 @@ def update_screen(player, camera, map):
 
     if game_boss in loaded_enemies:
         game_boss.show_life(screen)
+        
 
 def first_dialog():
     pygame.mixer.music.stop()
@@ -453,6 +451,7 @@ def first_dialog():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
                 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -515,6 +514,9 @@ def boss_dialog():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     dialog = False
+                if event.key == pygame.K_q:
+                    player.equiped = False
+                    player.weapon = None
                         
         pygame.display.flip()
 
@@ -611,7 +613,7 @@ def boss_level1():
         map_boss.draw_map(screen)
         map_boss.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts)
 
-        update_screen(player, camera, map_boss)
+        update_screen(player, camera, map_boss, loaded_guns)
         
         item_handler(loaded_items, player_blts, enemies_blts, map_boss, spawn_guns=False)
         enemies_handler(loaded_enemies, map_boss, boss_level=True)
@@ -629,6 +631,12 @@ def boss_level1():
                 pygame.quit()
                 sys.exit()
 
+            if event.type == EQUIP_EVENT:
+                player.equip()
+            elif event.type == DEQUIP_EVENT:   
+                player.dequip()
+                player.weapon = None
+
         pygame.display.flip()
     
 
@@ -637,7 +645,7 @@ def level1():
     defeated_enemies = 0
     won = False
 
-    update_screen(player, camera, map_1)
+    update_screen(player, camera, map_1, loaded_guns)
     player.update(screen)
     first_dialog()
 
@@ -654,7 +662,7 @@ def level1():
         map_1.draw_map(screen) # desenha o mapa (background)
         map_1.check_block_collisions(player, loaded_enemies, player_blts + enemies_blts) # checa colisões no mapa
         
-        update_screen(player, camera, map_1)
+        update_screen(player, camera, map_1, loaded_guns)
 
         item_handler(loaded_items, player_blts, enemies_blts, map_1)
 
@@ -665,14 +673,12 @@ def level1():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_i:
-                    print(player.weapon, player.equiped, loaded_guns, player_blts, enemies_blts)
 
             if event.type == EQUIP_EVENT:
                 player.equip()
             elif event.type == DEQUIP_EVENT:   
                 player.dequip()
+                player.weapon = None
 
         if player.life <= 0:
             fade_in(screen)
