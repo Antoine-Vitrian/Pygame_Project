@@ -83,7 +83,7 @@ player_blts = []
 enemies_blts = []
 
 # BOSS
-game_boss = Boss1('')
+game_boss = Boss1('', 6)
 
 # Funções para o jogo
 
@@ -367,16 +367,17 @@ def update_screen(player, camera, map, guns):
     # Jogador, inimigos e itens
     # armas
     for gun in guns:
-        if not isinstance(gun, Laser_gun):
-            gun.update(player, screen, player_blts)
-        else:
-            gun.update(player, screen, loaded_enemies)
+        if gun:
+            if not isinstance(gun, Laser_gun):
+                gun.update(player, screen, player_blts)
+            else:
+                gun.update(player, screen, loaded_enemies)
 
-        if not gun.equiped:
-            gun.check_equip(player)
+            if not gun.equiped:
+                gun.check_equip(player)
 
-            if gun.rect.colliderect(player.rect):
-                e_key.show_key(screen, player)
+                if gun.rect.colliderect(player.rect):
+                    e_key.show_key(screen, player)
 
     # player
     player.draw_player(screen)
@@ -520,6 +521,97 @@ def boss_dialog():
                         
         pygame.display.flip()
 
+def victory_cutscene():
+    pygame.mixer.music.stop()
+    # caixa de dialogo 
+    dialog_box = DialogBox('Img/other/dialog_box.png', (255, 255, 255))
+    # Posição da caixa de dialogo
+    position_x = (SCREEN_WIDTH - dialog_box.image.get_width()) // 2
+    position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
+
+    # caminho das imagens do Erik e do Viktor respectivamente
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+
+    dialogo = [
+        'VIKTOR: Hah... então... é assim que termina, irmão.',
+        'ERIK: Eu não queria que fosse assim, Viktor. Nunca quis.',
+        'VIKTOR: Nem eu... Só queria... paz. Paz para todos nós. Mas... eu me perdi no caminho, não foi?',
+        'ERIK: Você fez o que achou que precisava fazer. Mesmo que tenha sido... o caminho errado.',
+        'VIKTOR: Será que... você consegue, Erik?',
+        'VIKTOR: Salvar Varsênia... dar esperança...?',
+        'ERIK: Não importa o quão difícil seja. Enquanto eu respirar... eu vou lutar. Por nós dois.',
+        'VIKTOR: Heh...'
+        'VIKTOR: Então... talvez... eu não tenha falhado tanto assim...',
+        'ERIK: Descanse, Viktor.',
+        'ERIK: Eu vou carregar seu fardo... até o fim.'
+        ]
+    text_counter = 0
+
+    # Configurações para a cutscene
+    # Player
+    player.direction = 'right'
+    player.state = 'walking'
+    player.frame = 0
+    player.rect.topleft = (200, 700)
+
+    # Boss
+    game_boss.rect.topleft = (900, 700)
+
+    # Posição da camera
+    camera.centerx = game_boss.rect.centerx - camera.width//3
+    camera.centery = player.rect.centery
+    
+    init_dist = camera.width // 3
+    start_dialog = False
+
+    dialog = True
+    while dialog:
+        clock.tick(30)
+
+        map_boss.draw_map(screen)
+        player.draw_player(screen)
+        screen.blit(game_boss.surface, (game_boss.rect.x - camera.x, game_boss.rect.y - camera.y))
+
+        if game_boss.rect.left - player.rect.right >= init_dist:
+            player.rect.x += 2
+            end_time = pygame.time.get_ticks()
+
+        elif not start_dialog:
+            end_time = pygame.time.get_ticks()
+            start_dialog = True
+            player.frame = 0
+            player.state = 'idle'
+
+        if pygame.time.get_ticks() - end_time >= 2000 and start_dialog: # Dialogo final
+            # Carregar texto e imagem de cada um dos personagens
+            if 'erik:' in dialogo[text_counter].lower():
+                text = dialogo[text_counter].replace('ERIK: ', '')
+                img = pygame.image.load(imgs[0])
+            else:
+                text = dialogo[text_counter].replace('VIKTOR: ', '')
+                img = pygame.image.load(imgs[1]) 
+            
+
+            if dialog_box.draw(screen, (position_x, position_y), text, img):
+                if text_counter < len(dialogo) - 1 and dialog_box.done:
+                    text_counter += 1
+                    dialog_box.reset()
+                else:
+                    dialog = False
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    dialog = False
+                if event.key == pygame.K_q:
+                    player.equiped = False
+                    player.weapon = None
+                        
+        pygame.display.flip()
 # -----------------Telas--------------------------
 def main_menu():
     pygame.mixer.music.stop()
@@ -599,9 +691,11 @@ def boss_level1():
     boss_dialog()
 
     # Caso o jogador não esteja segurando uma arma
-    if not len(loaded_guns) and player.weapon == None:
+    print(loaded_guns, player.weapon)
+    if not any(loaded_guns) and player.weapon == None:
+        loaded_guns.clear()
         loaded_guns.append(
-            Gun(530, 740, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
+            Gun(player.rect.centerx + 30, player.rect.centery, 20, 'Img/Armas/pistol.png', 14, 60, 10, False)
         )
 
     boss = True
@@ -623,7 +717,8 @@ def boss_level1():
             boss = False
 
         elif game_boss.life <= 0:
-            pass #TODO Tela de vitória
+            fade_in(screen)
+            victory_cutscene()
             boss = False
 
         for event in pygame.event.get():
@@ -686,7 +781,7 @@ def level1():
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 1 and not won:
+        if defeated_enemies >= 0 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:

@@ -184,7 +184,7 @@ class Enemy():
 
 
 class Boss1():
-    def __init__(self, image):
+    def __init__(self, image, life):
         self.surface = pygame.surface.Surface((80, 80)) # temporário até ter um sprite 
         self.surface.fill((255, 50, 50))
         # self.image = pygame.image.load(image) 
@@ -192,8 +192,8 @@ class Boss1():
         self.rect.x, self.rect.y = (800, 700)
 
         #status
-        self.max_life = 600
-        self.life = 600
+        self.max_life = life
+        self.life = life
         self.acc = 0.6
         self.speed_x = 0
         self.speed_y = 0
@@ -238,7 +238,11 @@ class Boss1():
                     self.plr_atack(blt_list)
                     self.last_plr_atk = current_time
 
-            screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
+            self.animate(screen)
+
+    def animate(self, screen):
+        #TODO Modificar esse método para quando o sprite for adicionado
+        screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
 
     def look_player(self, plr):
         dist_x = self.rect.centerx - plr.rect.centerx
