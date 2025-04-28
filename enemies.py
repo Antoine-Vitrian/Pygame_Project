@@ -194,7 +194,7 @@ class Boss1():
         #status
         self.max_life = life
         self.life = life
-        self.acc = 0.6
+        self.acc = 0.3
         self.speed_x = 0
         self.speed_y = 0
         self.invincible = False
@@ -208,13 +208,13 @@ class Boss1():
 
         # ataques (2 ataques, um mirando no player e outro em circulo)
         self.sml_blt_image = pygame.image.load('Img/other/boss_blt.png')
-        self.blt_image = pygame.transform.scale(self.sml_blt_image, (25, 25))
-        self.blt_speed = 5
-        self.blt_time = 300
-        self.damage = 30
-        self.cirlce_atk_cooldown = 2000
+        self.blt_image = pygame.transform.scale(self.sml_blt_image, (20, 20))
+        self.blt_speed = 6
+        self.blt_time = 500
+        self.damage = 20
+        self.cirlce_atk_cooldown = 2500
         self.last_circle_atk = pygame.time.get_ticks()
-        self.plr_atk_cooldown = 500
+        self.plr_atk_cooldown = 700
         self.last_plr_atk = pygame.time.get_ticks()
         self.blts = []
         self.angle = 0 # mira para o player

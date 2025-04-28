@@ -56,7 +56,7 @@ e_key = ShowKey()
 
 player.rect.clamp_ip(camera)
 
-gun_spawn_cooldown = 0 #8000
+gun_spawn_cooldown = 8000
 last_gun_spawn = pygame.time.get_ticks()
 gun_spawn_chance = 0
 
@@ -83,7 +83,7 @@ player_blts = []
 enemies_blts = []
 
 # BOSS
-game_boss = Boss1('', 6)
+game_boss = Boss1('', 600)
 
 # Funções para o jogo
 
@@ -404,7 +404,6 @@ def update_screen(player, camera, map, guns):
     if game_boss in loaded_enemies:
         game_boss.show_life(screen)
         
-
 def first_dialog():
     pygame.mixer.music.stop()
     # caixa de dialogo 
@@ -552,10 +551,10 @@ def victory_cutscene():
     player.direction = 'right'
     player.state = 'walking'
     player.frame = 0
-    player.rect.topleft = (200, 700)
+    player.rect.bottomleft = (200, 650)
 
     # Boss
-    game_boss.rect.topleft = (900, 700)
+    game_boss.rect.bottomleft = (900, 650)
 
     # Posição da camera
     camera.centerx = game_boss.rect.centerx - camera.width//3
@@ -597,27 +596,23 @@ def victory_cutscene():
                     text_counter += 1
                     dialog_box.reset()
                 else:
+                    fade_in(screen)
                     dialog = False
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-                
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    dialog = False
-                if event.key == pygame.K_q:
-                    player.equiped = False
-                    player.weapon = None
                         
         pygame.display.flip()
+
 # -----------------Telas--------------------------
+
 def main_menu():
     pygame.mixer.music.stop()
     menu = True
     while menu:
-        screen.blit(fundo_menu,(0, 0))
+        screen.blit(fundo_menu,(0, -160))
         screen.blit(menu_logo, (SCREEN_WIDTH// 2 - menu_logo.get_width()//2, 100))
 
         if start_btn.draw(screen):
@@ -690,8 +685,11 @@ def boss_level1():
 
     boss_dialog()
 
-    # Caso o jogador não esteja segurando uma arma
-    print(loaded_guns, player.weapon)
+    # Toca a música do boss
+    pygame.mixer.music.load("audio/music/the_mastermind-boss.mp3")
+    pygame.mixer.music.play(-1)
+
+    # Caso o jogador não esteja segurando uma arma, outra arma é adicionada no jogo
     if not any(loaded_guns) and player.weapon == None:
         loaded_guns.clear()
         loaded_guns.append(
@@ -700,7 +698,6 @@ def boss_level1():
 
     boss = True
     while boss:
-
 
         clock.tick(FPS)
 
@@ -734,7 +731,6 @@ def boss_level1():
 
         pygame.display.flip()
     
-
 def level1():
     pygame.mixer.music.stop()
     defeated_enemies = 0
@@ -790,7 +786,6 @@ def level1():
 
         pygame.display.flip()
     
-
 if __name__ == "__main__":
     main_menu()
 

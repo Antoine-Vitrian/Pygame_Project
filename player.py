@@ -28,7 +28,7 @@ class Player():
         self.weapon = None
         self.invincible = False
         self.last_invincible = pygame.time.get_ticks()
-        self.invincible_cWoldown = 800
+        self.invincible_cooldown = 800
 
         # Movimentação 
         self.speed_x = 0
