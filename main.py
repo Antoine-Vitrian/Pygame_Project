@@ -656,6 +656,8 @@ def boss_level1():
     game_boss.last_circle_atk = pygame.time.get_ticks()
     game_boss.last_plr_atk = pygame.time.get_ticks()
 
+    player.life = player.max_life
+
     # Remove todos os inimigos do mapa
     loaded_enemies.clear()
 
@@ -715,6 +717,12 @@ def boss_level1():
 
         elif game_boss.life <= 0:
             fade_in(screen)
+
+            for gun in loaded_guns:
+                if isinstance(gun, Laser_gun):
+                    if gun.channel.get_busy():
+                        gun.channel.stop()
+
             victory_cutscene()
             boss = False
 
@@ -777,11 +785,15 @@ def level1():
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 0 and not won:
+        if defeated_enemies >= 15 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:
             if pygame.time.get_ticks() - won_time >= 500:
+                for gun in loaded_guns:
+                    if isinstance(gun, Laser_gun):
+                        if gun.channel.get_busy():
+                            gun.channel.stop()
                 return True
 
         pygame.display.flip()

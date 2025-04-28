@@ -253,7 +253,7 @@ class Laser_gun():
 
                     # Toca o som só se ainda não estiver tocando
                     if self.channel is None or not self.channel.get_busy():
-                        self.channel = self.tiro_sfx.play(-1)  # -1 = loop
+                        self.channel = self.tiro_sfx.play()
                 else:
                     self.overheat_timer = 120
             else:

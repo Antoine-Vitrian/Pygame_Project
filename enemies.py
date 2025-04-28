@@ -16,6 +16,7 @@ class Enemy():
         self.animation_cooldown = animation_cooldown
         self.last_update = pygame.time.get_ticks()
         self.frame = 0
+        self.dist = 99999999999
 
         #retângulo
         self.rect = pygame.rect.Rect(x, y, self.sprite_width * scale, self.sprite_height * scale)
@@ -23,6 +24,7 @@ class Enemy():
         # Enemy status
         self.max_life = life
         self.life = life
+        self.last_life = life
         self.ammo = ammo
         self.curr_ammo = ammo
         self.acc = acc
@@ -41,6 +43,9 @@ class Enemy():
 
         # other
         self.angle = 0
+        self.hurt_sfx = pygame.mixer.Sound('audio/effects/enemy_hurt.mp3')
+        self.hurt_sfx.set_volume(0)
+        self.channel = None
 
     def update(self, screen, player, blts):
         curr_time = pygame.time.get_ticks()
@@ -56,6 +61,11 @@ class Enemy():
         self.animate(screen)
 
         self.gun.update_enemy(self, screen, player)
+
+        # Detecta se leva dano
+        if self.last_life != self.life:
+            self.hurt_sound()
+            self.last_life = self.life
 
     def animate(self, screen):
         current_time = pygame.time.get_ticks()
@@ -75,8 +85,6 @@ class Enemy():
 
             self.last_update = current_time
 
-        
-
         # Muda entre animações
         if self.action == 'idle':
             if self.gun.hand == 'right':
@@ -90,6 +98,11 @@ class Enemy():
                 blit_image = pygame.transform.flip(self.running_animation[self.frame], True, False).convert_alpha()
 
         screen.blit(blit_image, (self.rect.x - camera.x, self.rect.y - camera.y))
+
+    def hurt_sound(self):
+        self.hurt_sfx.set_volume(max(0, (5 - self.dist//100)/10))
+        if self.channel is None or not self.channel.get_busy():
+            self.channel = self.hurt_sfx.play()
 
     def angle_difference(self, a, b):
         """Smallest difference between two angles (in radians)."""
@@ -194,7 +207,7 @@ class Boss1():
         #status
         self.max_life = life
         self.life = life
-        self.acc = 0.3
+        self.acc = 0.5
         self.speed_x = 0
         self.speed_y = 0
         self.invincible = False
@@ -208,8 +221,8 @@ class Boss1():
 
         # ataques (2 ataques, um mirando no player e outro em circulo)
         self.sml_blt_image = pygame.image.load('Img/other/boss_blt.png')
-        self.blt_image = pygame.transform.scale(self.sml_blt_image, (20, 20))
-        self.blt_speed = 6
+        self.blt_image = pygame.transform.scale(self.sml_blt_image, (25, 25))
+        self.blt_speed = 5
         self.blt_time = 500
         self.damage = 20
         self.cirlce_atk_cooldown = 2500

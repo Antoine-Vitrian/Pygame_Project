@@ -36,6 +36,10 @@ class Player():
         self.acc = 1.5
         self.friction = 0.3
 
+        # Efeitos sonoros
+        self.hurt_sfx = pygame.mixer.Sound('audio/effects/player_grunt.mp3')
+        self.hurt_sfx.set_volume(0.3)
+        self.channel = None
 
     def update(self, screen):
         current_time = pygame.time.get_ticks()
@@ -45,6 +49,7 @@ class Player():
             self.last_life = self.life
             self.invincible = True
             self.last_invincible = pygame.time.get_ticks()
+            self.hurt_sound()
 
         if self.invincible and current_time - self.last_invincible >= self.invincible_cooldown:
             self.invincible = False
@@ -84,6 +89,10 @@ class Player():
 
         if self.weapon:
             self.weapon.draw_ammo(screen)
+
+    def hurt_sound(self):
+        if self.channel == None or not self.channel.get_busy():
+            self.channel = self.hurt_sfx.play()
 
     def inputs(self, screen):
         keys_pressed = pygame.key.get_pressed()
