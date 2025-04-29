@@ -83,7 +83,8 @@ player_blts = []
 enemies_blts = []
 
 # BOSS
-game_boss = Boss1('', 600)
+boss_img = pygame.image.load('Img/characters/boss.png')
+game_boss = Boss1(boss_img, [3, 4], ANIMATION_COOLDOWN, 600, 3)
 
 # Funções para o jogo
 

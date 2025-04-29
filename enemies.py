@@ -197,10 +197,9 @@ class Enemy():
 
 
 class Boss1():
-    def __init__(self, image, life):
+    def __init__(self, image, animation_steps, animation_cooldown, life, scale):
         self.surface = pygame.surface.Surface((80, 80)) # temporário até ter um sprite 
         self.surface.fill((255, 50, 50))
-        # self.image = pygame.image.load(image) 
         self.rect = self.surface.get_rect()
         self.rect.x, self.rect.y = (800, 700)
 
@@ -231,6 +230,15 @@ class Boss1():
         self.last_plr_atk = pygame.time.get_ticks()
         self.blts = []
         self.angle = 0 # mira para o player
+
+        # animação
+        self.sprite_sheet = SpriteSheet(image)
+        self.animation_list = self.sprite_sheet.get_animations(animation_steps, 30, 34, scale)
+        self.animation_cooldown = animation_cooldown
+        self.last_update = pygame.time.get_ticks()
+        self.idle_animation_list = self.animation_list[0]
+        self.walking_animation_list = self.animation_list[1]
+        self.frame = 0
         
     def update(self, screen, player, blt_list):
         current_time = pygame.time.get_ticks()
@@ -254,8 +262,30 @@ class Boss1():
             self.animate(screen)
 
     def animate(self, screen):
-        #TODO Modificar esse método para quando o sprite for adicionado
-        screen.blit(self.surface, (self.rect.x - camera.x, self.rect.y- camera.y))
+        current_time = pygame.time.get_ticks()
+
+        if current_time - self.last_update >= self.animation_cooldown:
+            self.frame += 1
+            self.last_update = current_time
+
+        if self.state == 'idle':
+            if self.frame == len(self.idle_animation_list):
+                self.frame = 0
+            if self.direction == 'right':
+                screen.blit(self.idle_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
+            elif self.direction == 'left':
+                fliped_image = pygame.transform.flip(self.idle_animation_list[self.frame], True, False).convert_alpha()
+                screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
+
+        elif self.state == 'walking':
+            if self.frame == len(self.walking_animation_list) - 1:
+                self.frame = 0
+            
+            if self.direction == 'right':
+                screen.blit(self.walking_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
+            elif self.direction == 'left':
+                fliped_image = pygame.transform.flip(self.walking_animation_list[self.frame], True, False).convert_alpha()
+                screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
     def look_player(self, plr):
         dist_x = self.rect.centerx - plr.rect.centerx
