@@ -84,7 +84,7 @@ enemies_blts = []
 
 # BOSS
 boss_img = pygame.image.load('Img/characters/boss.png')
-game_boss = Boss1(boss_img, [3, 4], ANIMATION_COOLDOWN, 600, 3)
+game_boss = Boss1(boss_img, [3, 4], ANIMATION_COOLDOWN, 1, 3)
 
 # Funções para o jogo
 
@@ -405,6 +405,8 @@ def update_screen(player, camera, map, guns):
     if game_boss in loaded_enemies:
         game_boss.show_life(screen)
         
+# ------------cutscenes e dialogos
+
 def first_dialog():
     pygame.mixer.music.stop()
     # caixa de dialogo 
@@ -531,7 +533,7 @@ def victory_cutscene():
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
 
     # caminho das imagens do Erik e do Viktor respectivamente
-    imgs = ['Img/characters/protagonista_rosto.png', 'Img/characters/viktor_rosto.png']
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/characters/viktor_rosto_derrotado.png']
 
     dialogo = [
         'VIKTOR: Hah... então... é assim que termina, irmão.',
@@ -569,11 +571,11 @@ def victory_cutscene():
 
     dialog = True
     while dialog:
-        clock.tick(30)
+        clock.tick(FPS)
 
         map_boss.draw_map(screen)
         player.draw_player(screen)
-        game_boss.animate(screen)
+        screen.blit(pygame.transform.flip(game_boss.idle_animation_list[0], True, False).convert_alpha(), (game_boss.rect.x - camera.x, game_boss.rect.y - camera.y))
 
         if game_boss.rect.left - player.rect.right >= init_dist:
             player.rect.x += 2
@@ -793,7 +795,7 @@ def level1():
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 20 and not won:
+        if defeated_enemies >= 0 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:
