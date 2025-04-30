@@ -63,7 +63,7 @@ gun_spawn_chance = 0
 game_guns = []
 
 # inimigos
-enemy_limit = 10
+enemy_limit = 15
 spawn_cooldown = 1000 # em ms
 last_spawned_enemy = pygame.time.get_ticks()
 enemy_spawn_chance = 0
@@ -188,7 +188,7 @@ def fade_out(screen, map):
 
         map.draw_map(screen)
         player.draw_player(screen)
-        screen.blit(game_boss.surface, (game_boss.rect.x - camera.x, game_boss.rect.y - camera.y))
+        game_boss.animate(screen)
 
         if fade_ativo:
             fade_alpha -= 5
@@ -414,7 +414,7 @@ def first_dialog():
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
     
     # caminho das imagens do Erik e do Viktor respectivamente
-    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/characters/viktor_rosto.png']
 
     dialogo = [
         'ERIK: Eu voltei com sucesso Viktor! Estou no meio do fogo cruzado aqui! Mas, cara... é exatamente o que eu imaginava!',
@@ -469,7 +469,7 @@ def boss_dialog():
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
 
     # caminho das imagens do Erik e do Viktor respectivamente
-    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/characters/viktor_rosto.png']
 
     dialogo = [
         'ERIK: Viktor...? Não pode ser... Você veio! Conseguiu fazer a viagem também?',
@@ -490,6 +490,10 @@ def boss_dialog():
     dialog = True
     while dialog:
         clock.tick(FPS)
+
+        map_boss.draw_map(screen)
+        player.draw_player(screen)
+        game_boss.animate(screen)
         
         # Carregar texto e imagem de cada um dos personagens
         if 'erik:' in dialogo[text_counter].lower():
@@ -515,9 +519,6 @@ def boss_dialog():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     dialog = False
-                if event.key == pygame.K_q:
-                    player.equiped = False
-                    player.weapon = None
                         
         pygame.display.flip()
 
@@ -530,7 +531,7 @@ def victory_cutscene():
     position_y = SCREEN_HEIGHT - dialog_box.image.get_height() - 20
 
     # caminho das imagens do Erik e do Viktor respectivamente
-    imgs = ['Img/characters/protagonista_rosto.png', 'Img/tiles/arame_farpado.png']
+    imgs = ['Img/characters/protagonista_rosto.png', 'Img/characters/viktor_rosto.png']
 
     dialogo = [
         'VIKTOR: Hah... então... é assim que termina, irmão.',
@@ -556,6 +557,8 @@ def victory_cutscene():
 
     # Boss
     game_boss.rect.bottomleft = (900, 650)
+    game_boss.angle = 3
+    game_boss.action = 'idle'
 
     # Posição da camera
     camera.centerx = game_boss.rect.centerx - camera.width//3
@@ -570,7 +573,7 @@ def victory_cutscene():
 
         map_boss.draw_map(screen)
         player.draw_player(screen)
-        screen.blit(game_boss.surface, (game_boss.rect.x - camera.x, game_boss.rect.y - camera.y))
+        game_boss.animate(screen)
 
         if game_boss.rect.left - player.rect.right >= init_dist:
             player.rect.x += 2
@@ -675,18 +678,22 @@ def boss_level1():
     player.frame = 0
 
     game_boss.rect.x, game_boss.rect.y = 800, 700
+    game_boss.angle = 3
 
     camera.centerx = (player.rect.centerx + game_boss.rect.centerx)//2
     camera.centery = player.rect.centery
     map_boss.draw_map(screen)
     player.draw_player(screen)
-    for enemy in loaded_enemies:
-        enemy.update(screen, player, enemies_blts)
+    
+    game_boss.action = 'idle'
+    game_boss.animate(screen)
 
     # voltar a tela para o mapa do boss
     fade_out(screen, map_boss)
 
     boss_dialog()
+
+    game_boss.action = 'walking'
 
     # Toca a música do boss
     pygame.mixer.music.load("audio/music/the_mastermind-boss.mp3")
@@ -786,15 +793,11 @@ def level1():
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 15 and not won:
+        if defeated_enemies >= 20 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:
             if pygame.time.get_ticks() - won_time >= 500:
-                for gun in loaded_guns:
-                    if isinstance(gun, Laser_gun):
-                        if gun.channel.get_busy():
-                            gun.channel.stop()
                 return True
 
         pygame.display.flip()

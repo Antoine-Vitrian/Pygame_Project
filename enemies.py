@@ -198,11 +198,6 @@ class Enemy():
 
 class Boss1():
     def __init__(self, image, animation_steps, animation_cooldown, life, scale):
-        self.surface = pygame.surface.Surface((80, 80)) # temporário até ter um sprite 
-        self.surface.fill((255, 50, 50))
-        self.rect = self.surface.get_rect()
-        self.rect.x, self.rect.y = (800, 700)
-
         #status
         self.max_life = life
         self.life = life
@@ -212,7 +207,7 @@ class Boss1():
         self.invincible = False
 
         # movimentação
-        self.action = 'anything'
+        self.action = 'walking'
         self.direction = 0 # direção de movimento
         self.change_cooldown = 1900 # tempo máximo andando para uma direção
         self.last_change = pygame.time.get_ticks()
@@ -239,6 +234,9 @@ class Boss1():
         self.idle_animation_list = self.animation_list[0]
         self.walking_animation_list = self.animation_list[1]
         self.frame = 0
+
+        self.rect = self.animation_list[0][0].get_rect()
+        self.rect.x, self.rect.y = (800, 700)
         
     def update(self, screen, player, blt_list):
         current_time = pygame.time.get_ticks()
@@ -268,24 +266,25 @@ class Boss1():
             self.frame += 1
             self.last_update = current_time
 
-        if self.state == 'idle':
+        if self.action == 'idle':
             if self.frame == len(self.idle_animation_list):
                 self.frame = 0
-            if self.direction == 'right':
+            if self.angle >= -1.5 and self.angle < 1.5:
                 screen.blit(self.idle_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
-            elif self.direction == 'left':
+            else:
                 fliped_image = pygame.transform.flip(self.idle_animation_list[self.frame], True, False).convert_alpha()
                 screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
 
-        elif self.state == 'walking':
+        elif self.action == 'walking':
             if self.frame == len(self.walking_animation_list) - 1:
                 self.frame = 0
             
-            if self.direction == 'right':
+            if self.angle >= -1.5 and self.angle < 1.5:
                 screen.blit(self.walking_animation_list[self.frame], (self.rect.x - camera.x, self.rect.y - camera.y))
-            elif self.direction == 'left':
+            else:
                 fliped_image = pygame.transform.flip(self.walking_animation_list[self.frame], True, False).convert_alpha()
                 screen.blit(fliped_image, (self.rect.x - camera.x, self.rect.y - camera.y))
+
 
     def look_player(self, plr):
         dist_x = self.rect.centerx - plr.rect.centerx
@@ -337,7 +336,11 @@ class Boss1():
 
             # retângulo da bala
             blt_rect = self.blt_image.get_rect()
-            blt_rect.centerx, blt_rect.centery = self.rect.centerx, self.rect.centery
+            blt_rect.centery = self.rect.bottom - self.rect.height//3
+            if self.angle >= -1.5 and self.angle < 1.5:
+                blt_rect.centerx = self.rect.right
+            else:
+                blt_rect.centerx = self.rect.left
 
             blt_list.append(Blt( # adiciona a bala na lista de balas
                 self.blt_image,
@@ -355,7 +358,11 @@ class Boss1():
         sin = math.sin(self.angle)
 
         blt_rect = self.blt_image.get_rect()
-        blt_rect.centerx, blt_rect.centery = self.rect.centerx, self.rect.centery
+        blt_rect.centery = self.rect.bottom - self.rect.height//3
+        if self.angle >= -1.5 and self.angle < 1.5:
+            blt_rect.centerx = self.rect.right
+        else:
+            blt_rect.centerx = self.rect.left
 
         blt_list.append(Blt( # adiciona a bala na lista de balas
                 self.blt_image,
