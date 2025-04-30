@@ -168,19 +168,21 @@ class Player():
             screen.blit(bazooka_ammo_pack, (20 + dist * pack, SCREEN_HEIGHT - 30))
 
 class ShowKey():
-    def __init__(self):
-        self.sprite_image = pygame.image.load('Img/other/E_key.png')
+    def __init__(self, path):
+        self.sprite_image = pygame.image.load(path)
         self.sprite_sheet = SpriteSheet(self.sprite_image)
-        self.animation_list = self.sprite_sheet.get_animations([8], 14, 14, 2)
+        self.animation_list = self.sprite_sheet.get_animations([4], 14, 14, 2)
         self.frame = 0
         self.last_update = pygame.time.get_ticks()
-        self.cooldown = 50
+        self.cooldown = 100
 
-    def show_key(self, screen, player):
+    def show_key(self, screen, pos):
         curr_time = pygame.time.get_ticks()
 
+        pos_x, pos_y = pos
+
         blit_img = self.animation_list[0][self.frame]
-        screen.blit(blit_img, (player.rect.x + player.rect.width//2 - blit_img.get_width()//2 - camera.x, player.rect.y - 30 - camera.y))
+        screen.blit(blit_img, (pos_x - blit_img.get_width()//2, pos_y))
         if curr_time - self.last_update >= self.cooldown:
             self.frame += 1
             self.last_update = curr_time

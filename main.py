@@ -52,7 +52,8 @@ PLAYER_INITIAL_Y = 300
 INITIAL_AMMO = (5, 4)
 
 player = Player(PLAYER_INITIAL_X, PLAYER_INITIAL_Y, PLAYER_MAX_HP, 'Img/characters/protagonista.png', 2.5, ANIMATION_COOLDOWN, [1, 3], 28, 31)
-e_key = ShowKey()
+e_key = ShowKey('Img/other/E_key.png')
+r_key = ShowKey('Img/other/R_key.png')
 
 player.rect.clamp_ip(camera)
 
@@ -371,6 +372,10 @@ def update_screen(player, camera, map, guns):
         if gun:
             if not isinstance(gun, Laser_gun):
                 gun.update(player, screen, player_blts)
+
+                if gun.curr_ammo == 0 and gun.equiped and not gun.recharge:
+                    r_key.show_key(screen, (60, 85))
+
             else:
                 gun.update(player, screen, loaded_enemies)
 
@@ -378,7 +383,7 @@ def update_screen(player, camera, map, guns):
                 gun.check_equip(player)
 
                 if gun.rect.colliderect(player.rect):
-                    e_key.show_key(screen, player)
+                    e_key.show_key(screen, (player.rect.right - player.rect.width//2 - camera.x, player.rect.y - 30 - camera.y))
 
     # player
     player.draw_player(screen)
@@ -795,7 +800,7 @@ def level1():
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 0 and not won:
+        if defeated_enemies >= 20 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:
