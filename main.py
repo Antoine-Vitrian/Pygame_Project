@@ -602,7 +602,7 @@ def victory_cutscene():
                 img = pygame.image.load(imgs[1]) 
             
 
-            if dialog_box.draw(screen, (position_x, position_y), text, img):
+            if dialog_box.draw(screen, (position_x, position_y), text, img, skipable=False):
                 if text_counter < len(dialogo) - 1 and dialog_box.done:
                     text_counter += 1
                     dialog_box.reset()
@@ -730,7 +730,7 @@ def boss_level1():
             game_over()
             boss = False
 
-        elif game_boss.life <= 0:
+        if game_boss.life <= 0:
             fade_in(screen)
 
             for gun in loaded_guns:
@@ -745,12 +745,6 @@ def boss_level1():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-
-            if event.type == EQUIP_EVENT:
-                player.equip()
-            elif event.type == DEQUIP_EVENT:   
-                player.dequip()
-                player.weapon = None
 
         pygame.display.flip()
     
@@ -788,19 +782,13 @@ def level1():
                 pygame.quit()
                 sys.exit()
 
-            if event.type == EQUIP_EVENT:
-                player.equip()
-            elif event.type == DEQUIP_EVENT:   
-                player.dequip()
-                player.weapon = None
-
         if player.life <= 0:
             fade_in(screen)
             game_over()
             run = False
 
         #Define a quantidade de inimigos que devem ser derrotados para avançar de fase
-        if defeated_enemies >= 20 and not won:
+        if defeated_enemies >= 15 and not won:
             won_time = pygame.time.get_ticks()
             won = True
         if won:

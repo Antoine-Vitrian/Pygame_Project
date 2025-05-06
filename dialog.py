@@ -13,7 +13,7 @@ class DialogBox():
         self.color = color
         self.done = False
 
-    def draw(self, screen, pos, text, img):
+    def draw(self, screen, pos, text, img, skipable=True):
         keys_pressed = pygame.key.get_pressed()
 
         # Ajusta o tamanho da imagem
@@ -29,8 +29,9 @@ class DialogBox():
 
         screen.blit(self.image, pos)
         self.write(text)
-        skip_text = self.font.render('Pressione esc para pular', True, (200, 255, 255))
-        screen.blit(skip_text, (pos[0] + self.image.get_width() - skip_text.get_width(), pos[1] + self.image.get_height()))
+        if skipable:
+            skip_text = self.font.render('Pressione esc para pular', True, (200, 255, 255))
+            screen.blit(skip_text, (pos[0] + self.image.get_width() - skip_text.get_width(), pos[1] + self.image.get_height()))
 
         if any(keys_pressed):
             if not self.done:     

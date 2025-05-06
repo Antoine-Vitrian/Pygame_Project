@@ -3,9 +3,6 @@ import math
 from camera import camera
 from sprites import *
 
-EQUIP_EVENT = pygame.USEREVENT + 1
-DEQUIP_EVENT = pygame.USEREVENT + 2 
-
 class Gun():
     def __init__(self, x, y, ammo, image, blt_speed, recharge_time, shoot_cooldown, auto_shoot):
         # surface e rectangle
@@ -53,7 +50,6 @@ class Gun():
                 self.equiped = False
                 plr.equiped = False
                 plr.weapon = None
-                pygame.event.post(pygame.event.Event(DEQUIP_EVENT))
 
             # Posição do mouse    
             pos_x, pos_y = pygame.mouse.get_pos()
@@ -90,7 +86,6 @@ class Gun():
                     self.equiped = True
                     plr.equiped = True
                     plr.weapon = self  # define essa arma como equipada pelo jogador
-                    pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     def get_angle(self, target, enemy=False):
         pos_x, pos_y = target
@@ -234,6 +229,7 @@ class Laser_gun():
             if keys_pressed[pygame.K_q] and plr.equiped == True:
                 self.equiped = False
                 plr.equiped = False
+                plr.weapon = None
             
             # calcula o ângulo da arma (com math)
             # dist_x = pos_x - self.rect.centerx + camera.x
@@ -280,7 +276,7 @@ class Laser_gun():
             self.equiped = True
             plr.equiped = True
             plr.weapon = self  # define essa arma como equipada pelo jogador
-            pygame.event.post(pygame.event.Event(EQUIP_EVENT))
+
 
     def get_angle(self):
         # calcula o ângulo da arma (com pygame.Vector2)
@@ -456,7 +452,6 @@ class Bazooka():
             self.equiped = True
             plr.equiped = True
             plr.weapon = self  # define essa arma como equipada pelo jogador
-            pygame.event.post(pygame.event.Event(EQUIP_EVENT))
 
     #-----------------munição e balas-------------------------------
     def shoot(self, mouse_x, mouse_y):
